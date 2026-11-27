@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — 4 ПОРОГА НАГРАД (1500 / 3000 / 5000 / 8000) (v2.1.2-BETA)
+   ОРДЕН КХАМАЧА — СТУПЕНЧАТАЯ РЕДКОСТЬ ЛУТА ОТ УРОНА ПО БОССУ (v2.2.0-BETA)
    ========================================================================== */
 
 function applyPostBattleWear() {
@@ -23,20 +23,69 @@ function applyPostBattleWear() {
     });
 }
 
+function rollWeightedTierRarity(weights) {
+    // weights: [w1, w2, w3, w4] в сумме 100
+    const r = Math.random() * 100;
+    if (r < weights) return 1;
+    if (r < weights + weights) return 2;
+    if (r < weights + weights + weights) return 3;
+    return 4;
+}
+
 function getShipLootTierByDamage(damageDealt) {
-    if (damageDealt >= 8000) {
-        return { stage: 4, label: 'Порог 4: 🎁100% + 💎100%', itemChance: 1.0, gemChance: 1.0, nextGoal: 0 };
+    if (damageDealt >= 7000) {
+        return {
+            stage: 4,
+            label: 'Тир 4: 🎁🟦-🟨 + 💎100%',
+            itemChance: 1.0,
+            itemWeights:,
+            gemChance: 1.0,
+            gemWeights:,
+            nextGoal: 0
+        };
     }
-    if (damageDealt >= 5000) {
-        return { stage: 3, label: 'Порог 3: 🎁100% + 💎50%', itemChance: 1.0, gemChance: 0.5, nextGoal: 8000 };
-    }
-    if (damageDealt >= 3000) {
-        return { stage: 2, label: 'Порог 2: 🎁100%', itemChance: 1.0, gemChance: 0, nextGoal: 5000 };
+    if (damageDealt >= 3500) {
+        return {
+            stage: 3,
+            label: 'Тир 3: 🎁⬜-🟪 + 💎70%',
+            itemChance: 1.0,
+            itemWeights:,
+            gemChance: 0.70,
+            gemWeights:,
+            nextGoal: 7000
+        };
     }
     if (damageDealt >= 1500) {
-        return { stage: 1, label: 'Порог 1: 🎁50%', itemChance: 0.5, gemChance: 0, nextGoal: 3000 };
+        return {
+            stage: 2,
+            label: 'Тир 2: 🎁⬜-🟦 + 💎35%',
+            itemChance: 1.0,
+            itemWeights:,
+            gemChance: 0.35,
+            gemWeights:,
+            nextGoal: 3500
+        };
     }
-    return { stage: 0, label: 'Без награды', itemChance: 0, gemChance: 0, nextGoal: 1500 };
+    if (damageDealt >= 500) {
+        return {
+            stage: 1,
+            label: 'Тир 1: 🎁⬜ (100%)',
+            itemChance: 1.0,
+            itemWeights:,
+            gemChance: 0,
+            gemWeights:,
+            nextGoal: 1500
+        };
+    }
+    return {
+        stage: 0,
+        label: 'Цель: 500 урона',
+        itemChance: 0,
+        itemWeights:,
+        gemChance: 0,
+        gemWeights:,
+        nextGoal: 500
+    };
 }
 
 function grantEndlessBossRewards(damageDealt) {
@@ -58,7 +107,7 @@ function grantEndlessBossRewards(damageDealt) {
         const pSlots = EQUIP_SLOTS.pet;
         const s = pSlots[Math.floor(Math.random() * pSlots.length)];
         const stKey = sets[Math.floor(Math.random() * sets.length)];
-        const rar = typeof rollRandomRarityRank === 'function' ? rollRandomRarityRank() : 1;
+        const rar = rollWeightedTierRarity(tier.itemWeights);
         const rMeta = ITEM_RARITIES[rar] || ITEM_RARITIES;
 
         const bag = getBagItems();
@@ -67,23 +116,23 @@ function grantEndlessBossRewards(damageDealt) {
         report.push(`${rMeta.tag} ${s.icon} ${s.name} [${EQUIP_SETS[stKey].name}] (${rMeta.name})`);
     }
 
-    if (tier.gemChance > 0 && Math.random() < tier.gemChance && typeof rollRandomGemDrop === 'function') {
+    if (tier.gemChance > 0 && Math.random() < tier.gemChance) {
         const gems = getGemsList();
-        const droppedGem = rollRandomGemDrop();
-        gems.push(droppedGem);
+        const gKeys = Object.keys(GEMS_META);
+        const gType = gKeys[Math.floor(Math.random() * gKeys.length)];
+        const gRank = rollWeightedTierRarity(tier.gemWeights);
+        gems.push({ type: gType, rank: gRank });
         saveGemsList(gems);
-        const rm = GEM_RARITIES[droppedGem.rank];
-        const gm = GEMS_META[droppedGem.type];
-        report.push(`${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(droppedGem.type, droppedGem.rank)})`);
+
+        const rm = GEM_RARITIES[gRank] || GEM_RARITIES;
+        const gm = GEMS_META[gType];
+        report.push(`${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(gType, gRank)})`);
     }
 
     if (report.length === 0) {
-        const tip = tier.stage === 0
-            ? 'До 1-го порога (1 500 урона) не хватило немного выдержки!'
-            : 'Шанс 50% на 1-м пороге в этот раз не сработал — дотяните до 3 000 урона для гарантии!';
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n${tip}`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\nПродержитесь ~10–15 сек (500 урона) для гарантированной базовой вещи!`);
     } else {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (сложено в Рюкзак):\n• ${report.join('\n• ')}`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (в Рюкзак):\n• ${report.join('\n• ')}`);
     }
     if (typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
 }

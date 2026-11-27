@@ -9,7 +9,7 @@
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
         (function() {
-            window.GUILD_VERSION = "v1.9.1-BETA";
+            window.GUILD_VERSION = "v2.0.0-BETA";
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
@@ -22,7 +22,7 @@
                 'guild-equip-slots.js',
                 'guild-equip.js',
                 'guild-equip-actions.js',
-                'guild-shaman.js',
+                'guild-bag.js',
                 'guild-ship-audio.js',
                 'guild-ship-ctrl.js',
                 'guild-ship-loot.js',
@@ -60,9 +60,9 @@
                     <span class="tile-icon">🌳</span>
                     <span class="tile-label">Древо Навыков</span>
                 </button>
-                <button class="tile-btn" onclick="openGuildView('shaman')">
-                    <span class="tile-icon">🔮</span>
-                    <span class="tile-label">Шаман</span>
+                <button class="tile-btn" onclick="openGuildView('bag')">
+                    <span class="tile-icon">🎒</span>
+                    <span class="tile-label">Рюкзак</span>
                 </button>
                 <button class="tile-btn" onclick="openGuildView('pet')">
                     <span class="tile-icon">🐉</span>
@@ -70,7 +70,7 @@
                 </button>
                 <button class="tile-btn" onclick="openGuildView('ship')">
                     <span class="tile-icon">🚀</span>
-                    <span class="tile-label">Корабль и Полёт</span>
+                    <span class="tile-label">Корабль</span>
                 </button>
             </div>
             <div id="guild-version-footer" class="version-footer"></div>
@@ -80,7 +80,7 @@
             <h2 id="sub-view-title">Раздел</h2>
             <span id="sub-view-subtitle" class="subtitle">Описание</span>
             <div id="sub-view-body" class="sub-body"></div>
-            <button class="menu-btn back-tint" onclick="closeGuildView()">Назад в Орден</button>
+            <button id="sub-view-back-btn" class="menu-btn back-tint" onclick="closeGuildView()">Назад в Орден</button>
         </div>
     </div>
 </body>

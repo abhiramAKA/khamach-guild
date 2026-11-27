@@ -1,6 +1,24 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЮКЗАК: ИНДИКАТОРЫ (🟢/🔴/⚪), КАМНИ И ПРИПАСЫ (v2.9.9)
+   ОРДЕН КХАМАЧА — РЮКЗАК: СПРАВКА ❓, ИНДИКАТОРЫ (🟢/🔴/⚪) И ПРИПАСЫ (v2.9.11)
    ========================================================================== */
+
+function showBagHelpModal() {
+    alert(
+        "🎒 ПАМЯТКА ПО СИМВОЛАМ РЮКЗАКА\n\n" +
+        "• Сравнение с надетой вещью:\n" +
+        "  🟢 — вещь в рюкзаке сильнее надетой\n" +
+        "  🔴 — вещь в рюкзаке слабее надетой\n" +
+        "  ⚪ — одинаковая сила (удобно для слияния)\n\n" +
+        "• Цвета редкости (6 тиров):\n" +
+        "  ⬜ Обычный → 🟩 Необычный → 🟦 Редкий → 🟪 Эпический → 🟨 Легендарный → 🟥 Мифический\n\n" +
+        "• Самоцветы и принадлежность:\n" +
+        "  🐉 — вещь Питомца | 🚀 — модуль Корабля\n" +
+        "  🟠 Янтарь (+⚔️ Атака) | ⚪ Жемчуг (+❤️ Жизнь) | ⚫ Обсидиан (+💚 Реген)\n\n" +
+        "• Действия:\n" +
+        "  «+1 Ур.» — слияние с дубликатом той же редкости (не выше уровня Питомца/Корабля)\n" +
+        "  «🔩+» — разобрать вещь или камень на Металлолом"
+    );
+}
 
 function getSingleItemPowerScore(owner, slotKey, itemObj) {
     if (!itemObj || (itemObj.lvl || 1) < 1) return 0;
@@ -121,12 +139,13 @@ function renderGuildBagView() {
     }
 
     body.innerHTML = `
+        <div class="card-box" style="display:flex; justify-content:space-between; align-items:center; padding:6px 8px;">
+            <span style="font-size:12px; color:#ffd700; font-weight:bold;">🔩 Металлолом: ${scrap}</span>
+            <button class="mini-btn" onclick="showBagHelpModal()" style="font-size:11px; padding:3px 7px;" title="Справка по символам">❓</button>
+        </div>
         ${tokensHTML}
         <div class="card-box">
-            <div style="display:flex; justify-content:space-between; font-size:11px; color:#e6c280; font-weight:bold; margin-bottom:5px;">
-                <span>💎 САМОЦВЕТЫ (${gems.length})</span>
-                <span style="color:#cdb38c;">🔩 Лом: ${scrap}</span>
-            </div>
+            <div style="font-size:11px; color:#e6c280; font-weight:bold; margin-bottom:5px;">💎 САМОЦВЕТЫ (${gems.length})</div>
             ${gemsHTML}
         </div>
         <div class="card-box">

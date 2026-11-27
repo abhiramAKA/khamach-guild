@@ -78,9 +78,10 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
     font-size: 14px; font-weight: bold; cursor: pointer; transition: transform 0.1s ease;
 }
 .hex-cell:active { transform: scale(0.92); }
-.hex-owned { background: linear-gradient(to bottom, #2c5e2e, #163317); color: #a8f0aa; }
-.hex-enemy { background: linear-gradient(to bottom, #6e2222, #381010); color: #ffb3ba; }
-.hex-boss  { background: linear-gradient(to bottom, #7a1238, #3d061a); color: #ffd700; }
+.hex-owned { background: linear-gradient(to bottom, #2c5e2e, #163317); color: #a8f0aa; cursor: default; }
+.hex-front { background: linear-gradient(to bottom, #993322, #52160c); color: #ffe88c; filter: drop-shadow(0 0 3px #ffd700); }
+.hex-locked { background: linear-gradient(to bottom, #3b1515, #1f0a0a); color: #7a4949; opacity: 0.55; cursor: not-allowed; }
+.hex-boss  { background: linear-gradient(to bottom, #8a143e, #47071e); color: #ffd700; }
 .hex-big {
     width: 118px; height: 132px; margin: 8px auto;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);

@@ -1,6 +1,40 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ СО ШКАЛОЙ И ПИКОВЫМ БОНУСОМ (v2.8.1)
+   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ С МАССОВОЙ ПОЧИНКОЙ (v2.10.0)
    ========================================================================== */
+
+function getOwnerTotalRepairCost(owner) {
+    const equip = getEquipStorage(owner);
+    let totalCost = 0;
+    let damagedCount = 0;
+    EQUIP_SLOTS[owner].forEach(slot => {
+        const item = equip[slot.key];
+        if (!item || item.lvl < 1) return;
+        const dur = item.durability !== undefined ? item.durability : 100;
+        if (dur < 100) {
+            totalCost += Math.max(2, Math.ceil((100 - dur) / 10) * 2);
+            damagedCount++;
+        }
+    });
+    return { cost: totalCost, count: damagedCount };
+}
+
+function repairAllOwnerSlots(owner) {
+    const rep = getOwnerTotalRepairCost(owner);
+    if (rep.count === 0) return;
+    const scrap = getScrapMetal();
+    if (scrap < rep.cost) {
+        alert(`Недостаточно 🔩 Металлолома! Нужно ${rep.cost} 🔩, у вас ${scrap} 🔩.`);
+        return;
+    }
+    const equip = getEquipStorage(owner);
+    EQUIP_SLOTS[owner].forEach(slot => {
+        const item = equip[slot.key];
+        if (item && item.lvl >= 1) item.durability = 100;
+    });
+    setScrapMetal(scrap - rep.cost);
+    saveEquipStorage(owner, equip);
+    renderOwnerHubView(owner);
+}
 
 function showOwnerHelpModal(owner) {
     if (owner === 'pet') {
@@ -31,6 +65,8 @@ function renderOwnerHubView(owner) {
     const power = getOwnerPowerScore(stats);
     const lvlInfo = getOwnerLevelInfo(owner);
     const tokens = getUpgradeTokens(owner);
+    const scrap = getScrapMetal();
+    const repInfo = getOwnerTotalRepairCost(owner);
 
     const xpPct = Math.min(100, Math.round((lvlInfo.xp / lvlInfo.req) * 100));
     const peakTag = lvlInfo.isPeak ? ' <span style="color:#2ecc71;">(🔥 ПИК +20%)</span>' : '';
@@ -75,18 +111,23 @@ function renderOwnerHubView(owner) {
         ? `<button class="menu-btn green-btn" style="font-size:11px; padding:7px;" onclick="consumeOwnerToken('${owner}','hub')">${feedBtnLabel}</button>`
         : '';
 
+    const repairAllHTML = repInfo.count > 0
+        ? `<button class="menu-btn ${scrap >= repInfo.cost ? 'green-btn' : 'disabled-btn'}" style="font-size:11px; padding:7px;" onclick="repairAllOwnerSlots('${owner}')">🔧 Починить всё (${repInfo.count} шт. за ${repInfo.cost} 🔩 | Лом: ${scrap})</button>`
+        : '';
+
     body.innerHTML = `
         <div class="card-box" style="text-align:center; padding:12px 10px; position:relative;">
             <button class="mini-btn" onclick="showOwnerHelpModal('${owner}')" style="position:absolute; top:8px; right:8px; font-size:12px; padding:4px 8px;">❓</button>
-            <div style="font-size:48px; line-height:1; margin-bottom:4px;">${isPet ? '🐲' : '🚀'}</div>
+            <div style="font-size:46px; line-height:1; margin-bottom:4px;">${isPet ? '🐲' : '🚀'}</div>
             <div style="font-size:14px; font-weight:bold; color:#ffd700;">Уровень ${lvlInfo.lvl} / 7 | Мощь: ⚡ ${power}</div>
             <div style="font-size:10px; color:#8cd1ff; margin:3px 0;">${xpText}</div>
             <div style="width:85%; height:8px; background:#14100e; border:1px solid #544432; border-radius:4px; margin:0 auto 8px auto; overflow:hidden;">
                 <div style="width:${xpPct}%; height:100%; background:linear-gradient(to right, #4da6ff, #ffd700);"></div>
             </div>
             <div style="font-size:11px; color:#cdb38c; line-height:1.4; margin-bottom:10px;">${statusLine}</div>
-            <div style="display:flex; flex-direction:column; gap:7px;">
+            <div style="display:flex; flex-direction:column; gap:6px;">
                 ${mainActionHTML}
+                ${repairAllHTML}
                 ${feedButtonHTML}
                 <button class="menu-btn" onclick="renderOwnerGearConfig('${owner}')">⚙️ Характеристики и Снаряжение</button>
             </div>

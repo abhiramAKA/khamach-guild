@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>КХАМАЧ — Чертоги Ордена</title>
+    <script>
+        (function() {
+            window.GUILD_VERSION = "v1.0.0-ALPHA";
+            const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'guild-styles.css?v=' + window.GUILD_VERSION + '&t=' + buster;
+            document.head.appendChild(link);
+
+            const scripts = ['guild-views.js', 'guild-core.js'];
+            function loadSeq(idx) {
+                if (idx >= scripts.length) {
+                    if (typeof initGuildModule === 'function') initGuildModule();
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = scripts[idx] + '?v=' + window.GUILD_VERSION + '&t=' + buster;
+                s.async = false;
+                s.onload = function() { loadSeq(idx + 1); };
+                document.head.appendChild(s);
+            }
+            document.addEventListener('DOMContentLoaded', function() { loadSeq(0); });
+        })();
+    </script>
+</head>
+<body>
+    <div id="guild-app">
+        <div id="guild-main-screen" class="guild-window">
+            <div class="guild-header">
+                <button id="back-to-hub-btn" class="mini-btn back-tint" title="Вернуться в Цитадель">↩️ Хаб</button>
+                <h1>ОРДЕН КХАМАЧА</h1>
+                <span id="guild-lvl-badge" class="mini-btn gold-text">👑 1</span>
+            </div>
+            <span class="subtitle">Внешний Предел Абхирамбурга</span>
+
+            <div id="guild-resources-bar" class="res-bar"></div>
+
+            <div class="guild-grid">
+                <button class="tile-btn" onclick="openGuildView('skills')">
+                    <span class="tile-icon">🌳</span>
+                    <span class="tile-label">Древо Навыков</span>
+                </button>
+                <button class="tile-btn" onclick="openGuildView('alchemy')">
+                    <span class="tile-icon">🧪</span>
+                    <span class="tile-label">Алхимик</span>
+                </button>
+                <button class="tile-btn" onclick="openGuildView('smith')">
+                    <span class="tile-icon">⚒️</span>
+                    <span class="tile-label">Кузнец</span>
+                </button>
+                <button class="tile-btn" onclick="openGuildView('minigame')">
+                    <span class="tile-icon">🎲</span>
+                    <span class="tile-label">Испытание</span>
+                </button>
+            </div>
+            <div id="guild-version-footer" class="version-footer"></div>
+        </div>
+
+        <div id="guild-sub-screen" class="guild-window" style="display: none;">
+            <h2 id="sub-view-title">Раздел</h2>
+            <span id="sub-view-subtitle" class="subtitle">Описание</span>
+            <div id="sub-view-body" class="sub-body"></div>
+            <button class="menu-btn back-tint" onclick="closeGuildView()">Назад в Орден</button>
+        </div>
+    </div>
+</body>
+</html>

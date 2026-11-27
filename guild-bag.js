@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЮКЗАК: КОРМ, ЧЕРТЕЖИ, КАМНИ И ОГРАНИЧЕНИЕ ЗАТОЧКИ (v2.8.0)
+   ОРДЕН КХАМАЧА — РЮКЗАК: КОРМ, ЧЕРТЕЖИ, КАМНИ И СРАВНЕНИЕ ВЕЩЕЙ (v2.9.6)
    ========================================================================== */
 
 function renderGuildBagView() {
@@ -59,28 +59,30 @@ function renderGuildBagView() {
             const sMeta = EQUIP_SLOTS[owner].find(s => s.key === bItem.slotKey);
             const setMeta = EQUIP_SETS[bItem.set] || EQUIP_SETS.flame;
             const bRar = RARITY_TIERS[bItem.rarity || 1] || RARITY_TIERS;
+            const bLvl = bItem.lvl || 1;
+            const lvlBadge = bLvl > 1 ? ` Ур.${bLvl}` : '';
             const equip = getEquipStorage(owner);
             const equipped = equip[bItem.slotKey];
             const eqRarRank = equipped ? (equipped.rarity || 1) : 0;
 
             let btns = '';
-            if (!equipped) {
-                btns += `<button class="mini-btn green-btn" onclick="bagEquipByRealIdx(${realIdx})">Надеть</button>`;
+            if (!equipped || equipped.lvl < 1) {
+                btns += `<button class="mini-btn green-btn" onclick="bagEquipDirectByIdx(${realIdx})">Надеть</button>`;
             } else {
                 if (eqRarRank === bRar.rank && equipped.lvl < 7) {
                     if (equipped.lvl < maxOwnerLvl) {
                         btns += `<button class="mini-btn green-btn" onclick="bagMergeByRealIdx(${realIdx})">+1 Ур.</button>`;
                     } else {
-                        btns += `<button class="mini-btn disabled-btn" onclick="alert('Чтобы улучшить вещь до ${equipped.lvl + 1} ур., сначала поднимите уровень ${owner === 'pet' ? 'Питомца' : 'Корабля'} до ${equipped.lvl + 1} ур.!')" title="Нужен ${equipped.lvl + 1} ур. владельца">🔒Ур.${equipped.lvl + 1}</button>`;
+                        btns += `<button class="mini-btn disabled-btn" onclick="alert('Чтобы улучшить вещь до ${equipped.lvl + 1} ур., сначала поднимите уровень ${owner === 'pet' ? 'Питомца' : 'Корабля'} до ${equipped.lvl + 1} ур.!')">🔒Ур.${equipped.lvl + 1}</button>`;
                     }
                 }
-                const repLabel = bRar.rank > eqRarRank ? `Надеть ${bRar.tag}` : 'Заменить';
-                btns += `<button class="mini-btn" onclick="bagEquipByRealIdx(${realIdx})">${repLabel}</button>`;
+                const repLabel = bRar.rank > eqRarRank ? `Заменить ${bRar.tag}` : 'Заменить';
+                btns += `<button class="mini-btn" onclick="openBagReplaceCompareView(${realIdx})">${repLabel}</button>`;
             }
 
             return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px dashed #2e251d; font-size:11px; gap:4px;">
-                    <span style="color:${setMeta.color};">${ownerTag} ${bRar.tag} ${sMeta.icon} ${sMeta.name} [${setMeta.name}]</span>
+                    <span style="color:${setMeta.color};">${ownerTag} ${bRar.tag} ${sMeta.icon} ${sMeta.name}${lvlBadge} [${setMeta.name}]</span>
                     <div style="display:flex; gap:3px; flex-shrink:0;">
                         ${btns}
                         <button class="mini-btn back-tint" onclick="bagSalvageByRealIdx(${realIdx})" title="Разобрать на Лом">🔩+${bRar.itemScrap}</button>

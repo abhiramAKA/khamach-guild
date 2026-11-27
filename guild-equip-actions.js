@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ РЮКЗАКА, РЕМОНТА, ЧАР И ПОХОДА (v2.0.0-BETA)
+   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ РЮКЗАКА, ПОДТВЕРЖДЕНИЯ, РЕМОНТ И ЧАРЫ (v2.4.0)
    ========================================================================== */
 
 function rollRandomGemDrop() {
@@ -56,12 +56,20 @@ function bagSalvageByRealIdx(realIdx) {
     if (!picked) return;
 
     const rarRank = picked.rarity || 1;
+    const sMeta = EQUIP_SLOTS[picked.owner].find(s => s.key === picked.slotKey);
+    const rMeta = ITEM_RARITIES[rarRank] || ITEM_RARITIES;
+    const gain = 5 * rarRank;
+
+    if (!confirm(`Разобрать «${rMeta.name} ${sMeta.name}» на ${gain} 🔩 Металлолома и ${gain} ✨ Астрального Праха?`)) {
+        return;
+    }
+
     allBag.splice(realIdx, 1);
     saveBagItems(allBag);
 
-    setScrapMetal(getScrapMetal() + 5 * rarRank);
+    setScrapMetal(getScrapMetal() + gain);
     const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
-    localStorage.setItem('khamach_astral_dust', String(dust + 5 * rarRank));
+    localStorage.setItem('khamach_astral_dust', String(dust + gain));
     renderGuildBagView();
 }
 
@@ -80,7 +88,7 @@ function repairEquipSlot(owner, slotKey) {
     setScrapMetal(scrap - cost);
     item.durability = 100;
     saveEquipStorage(owner, equip);
-    renderOwnerGearConfig(owner);
+    if (typeof renderItemDetailView === 'function') renderItemDetailView(owner, slotKey);
 }
 
 function openGemSocketPicker(owner, slotKey) {
@@ -102,7 +110,7 @@ function openGemSocketPicker(owner, slotKey) {
     const rm = GEM_RARITIES[chosenGem.rank] || GEM_RARITIES;
     const gm = GEMS_META[chosenGem.type];
     alert(`Вставлен камень: ${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(chosenGem.type, chosenGem.rank)} ${STAT_LABELS[gm.stat]})`);
-    renderOwnerGearConfig(owner);
+    if (typeof renderItemDetailView === 'function') renderItemDetailView(owner, slotKey);
 }
 
 function enchantEquipItem(owner, slotKey) {
@@ -115,6 +123,11 @@ function enchantEquipItem(owner, slotKey) {
     const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
     if (rank >= 5 || dust < cost) return;
 
+    const sMeta = EQUIP_SLOTS[owner].find(s => s.key === slotKey);
+    if (!confirm(`Потратить ${cost} ✨ Астрального Праха, чтобы наложить случайные чары (Ранг ${rank + 1}) на «${sMeta.name}»?`)) {
+        return;
+    }
+
     const statsKeys = ['atk', 'hp', 'reg'];
     const chosenStat = statsKeys[Math.floor(Math.random() * statsKeys.length)];
 
@@ -122,7 +135,7 @@ function enchantEquipItem(owner, slotKey) {
     item.enchant = { stat: chosenStat, rank: rank + 1 };
     saveEquipStorage(owner, equip);
     alert(`Наложены чары: ${STAT_LABELS[chosenStat]} (+${(rank + 1) * 15}%)!`);
-    renderOwnerGearConfig(owner);
+    if (typeof renderItemDetailView === 'function') renderItemDetailView(owner, slotKey);
 }
 
 function startPetSpaceTrip() {

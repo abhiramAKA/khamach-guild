@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — 6 РЕДКОСТЕЙ, ПИКОВЫЙ БОНУС 7 УР. (+20%) И ЛИМИТ СУМКИ (v2.8.1)
+   ОРДЕН КХАМАЧА — ПЛОСКИЕ ЧАРЫ (+5/РАНГ), КРИВАЯ ОПЫТА И 6 РЕДКОСТЕЙ (v2.10)
    ========================================================================== */
 
 const EQUIP_SLOTS = {
@@ -44,7 +44,7 @@ const GEMS_META = {
 };
 
 const STAT_LABELS = { atk: '⚔️ Атака', hp: '❤️ Жизнь', reg: '💚 Реген' };
-const OWNER_XP_TABLE = { 1: 100, 2: 200, 3: 350, 4: 550, 5: 800, 6: 1100 };
+const OWNER_XP_TABLE = { 1: 100, 2: 300, 3: 650, 4: 1200, 5: 2000, 6: 3200 };
 const MAX_UPGRADE_TOKENS = 10;
 
 function getOwnerLevelInfo(owner) {
@@ -63,9 +63,9 @@ function getOwnerLevelInfo(owner) {
     }
 
     const lvl = Math.min(7, data.lvl);
-    const req = lvl >= 7 ? 1100 : (OWNER_XP_TABLE[lvl] || 1100);
-    const xp = lvl >= 7 ? Math.min(1100, data.xp) : data.xp;
-    const isPeak = (lvl === 7 && xp >= 1100);
+    const req = lvl >= 7 ? 3200 : (OWNER_XP_TABLE[lvl] || 3200);
+    const xp = lvl >= 7 ? Math.min(3200, data.xp) : data.xp;
+    const isPeak = (lvl === 7 && xp >= 3200);
     return { lvl: lvl, xp: xp, req: req, isPeak: isPeak };
 }
 
@@ -75,11 +75,9 @@ function addOwnerXp(owner, amount) {
     while (info.lvl < 7 && info.xp >= info.req) {
         info.xp -= info.req;
         info.lvl += 1;
-        info.req = info.lvl >= 7 ? 1100 : (OWNER_XP_TABLE[info.lvl] || 1100);
+        info.req = info.lvl >= 7 ? 3200 : (OWNER_XP_TABLE[info.lvl] || 3200);
     }
-    if (info.lvl >= 7) {
-        info.xp = Math.min(1100, info.xp);
-    }
+    if (info.lvl >= 7) info.xp = Math.min(3200, info.xp);
     localStorage.setItem(`khamach_${owner}_lvl_xp`, JSON.stringify({
         lvl: info.lvl, xp: info.xp, lastFeedTs: Date.now()
     }));
@@ -152,9 +150,10 @@ function calculateOwnerStats(owner) {
                 if (gm) base[gm.stat] += getGemBonusValue(gObj.rank || 1);
             });
         }
+        // Плоская прибавка от Чар: +5 за каждый ранг
         if (item.enchant && item.enchant.stat && item.enchant.rank > 0) {
             const effRank = Math.min(item.lvl, item.enchant.rank);
-            base[item.enchant.stat] = Math.round(base[item.enchant.stat] * (1 + effRank * 0.05));
+            base[item.enchant.stat] += effRank * 5;
         }
     });
 

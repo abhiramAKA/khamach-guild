@@ -1,15 +1,16 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, МЕТАЛЛОЛОМ И ЭКСПЕДИЦИИ (v1.9.0-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.0.0-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
 const PET_EXPEDITION_MS = 3600000;
 let activeGuildTimer = null;
+window.currentSubBackTarget = 'main';
 
 function initGuildStorageDefaults() {
     if (!localStorage.getItem('khamach_guild_v3_init')) {
         localStorage.setItem('khamach_guild_v3_init', 'true');
-        localStorage.setItem('khamach_astral_dust', '10');
+        localStorage.setItem('khamach_astral_dust', '15');
         setScrapMetal(15);
         setHealPotions(2);
 
@@ -27,9 +28,7 @@ function initGuildStorageDefaults() {
             { type: 'topaz', rank: 2 }
         ]);
     }
-    if (localStorage.getItem('khamach_scrap_metal') === null) {
-        setScrapMetal(15);
-    }
+    if (localStorage.getItem('khamach_scrap_metal') === null) setScrapMetal(15);
 }
 
 function isPetOnExpedition() {
@@ -58,11 +57,17 @@ function renderGuildHeaderStats() {
     if (resBar) {
         resBar.innerHTML = `
             <span style="color:#cdb38c;">🔩 Лом: ${scrap}</span> |
-            <span style="color:#e58cff;">✨ ${dust}</span> |
+            <span style="color:#e58cff;">✨ Прах: ${dust}</span> |
             <span style="color:#8cd1ff;">💎 ${gems.length}</span> |
             <span style="color:#2ecc71;">🧪 ${potions}</span>
         `;
     }
+}
+
+function setSubViewBack(target, label) {
+    window.currentSubBackTarget = target;
+    const btn = document.getElementById('sub-view-back-btn');
+    if (btn) btn.innerText = label || 'Назад в Орден';
 }
 
 function openGuildView(viewKey) {
@@ -71,16 +76,28 @@ function openGuildView(viewKey) {
 
     document.getElementById('guild-main-screen').style.display = 'none';
     document.getElementById('guild-sub-screen').style.display = 'flex';
+    setSubViewBack('main', 'Назад в Орден');
 
-    if (viewKey === 'pet' && typeof renderOwnerEquipView === 'function') renderOwnerEquipView('pet');
-    else if (viewKey === 'ship' && typeof renderOwnerEquipView === 'function') renderOwnerEquipView('ship');
-    else if (viewKey === 'shaman' && typeof renderShamanSection === 'function') renderShamanSection();
+    if (viewKey === 'pet' && typeof renderOwnerHubView === 'function') renderOwnerHubView('pet');
+    else if (viewKey === 'ship' && typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
+    else if (viewKey === 'bag' && typeof renderGuildBagView === 'function') renderGuildBagView();
     else if (viewKey === 'skills') renderSkillsSection();
 }
 
 function closeGuildView() {
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
+
+    if (window.currentSubBackTarget === 'pet' && typeof renderOwnerHubView === 'function') {
+        setSubViewBack('main', 'Назад в Орден');
+        renderOwnerHubView('pet');
+        return;
+    }
+    if (window.currentSubBackTarget === 'ship' && typeof renderOwnerHubView === 'function') {
+        setSubViewBack('main', 'Назад в Орден');
+        renderOwnerHubView('ship');
+        return;
+    }
 
     document.getElementById('guild-sub-screen').style.display = 'none';
     document.getElementById('guild-main-screen').style.display = 'flex';
@@ -92,12 +109,12 @@ function renderSkillsSection() {
     document.getElementById('sub-view-subtitle').innerText = "Перки Цитадели, Ратуши и Удачи";
     document.getElementById('sub-view-body').innerHTML = `
         <div class="card-box">
-            <strong style="color:#ffd700;">📜 Торговая Гильдия (В разработке)</strong>
-            <p style="margin:6px 0; font-size:11px; line-height:1.4;">Множитель выплат золота в Ратуше (x1.00 — x50.00) за пещерную руду.</p>
+            <strong style="color:#ffd700;">📜 Торговая Гильдия (Скоро)</strong>
+            <p style="margin:6px 0; font-size:11px;">Множитель выплат золота в Ратуше (x1.00 — x50.00) за пещерную руду.</p>
         </div>
         <div class="card-box">
-            <strong style="color:#2ecc71;">🍀 Благословение Искателя (В разработке)</strong>
-            <p style="margin:6px 0; font-size:11px; line-height:1.4;">Повышает шанс найти легендарные камни и зелья в походах.</p>
+            <strong style="color:#2ecc71;">🍀 Благословение Искателя (Скоро)</strong>
+            <p style="margin:6px 0; font-size:11px;">Повышает шанс найти легендарные вещи, камни и зелья.</p>
         </div>
     `;
 }
@@ -107,7 +124,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка v1.9.0-BETA`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.0.0-BETA'}`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

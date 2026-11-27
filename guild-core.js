@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.0.0-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, РЮКЗАК И ОПИСАНИЯ РАЗДЕЛОВ (v2.3.0)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -45,22 +45,16 @@ function getSharedSquadLevel() {
 
 function renderGuildHeaderStats() {
     const lvl = getSharedSquadLevel();
-    const scrap = getScrapMetal();
-    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
-    const gems = getGemsList();
-    const potions = getHealPotions();
+    const bagCount = getBagItems().length;
+    const gemsCount = getGemsList().length;
 
     const lvlBadge = document.getElementById('guild-lvl-badge');
     if (lvlBadge) lvlBadge.innerText = `👑 ${lvl}`;
 
     const resBar = document.getElementById('guild-resources-bar');
     if (resBar) {
-        resBar.innerHTML = `
-            <span style="color:#cdb38c;">🔩 Лом: ${scrap}</span> |
-            <span style="color:#e58cff;">✨ Прах: ${dust}</span> |
-            <span style="color:#8cd1ff;">💎 ${gems.length}</span> |
-            <span style="color:#2ecc71;">🧪 ${potions}</span>
-        `;
+        const badge = (bagCount + gemsCount) > 0 ? ` (${bagCount + gemsCount})` : '';
+        resBar.innerHTML = `<button class="menu-btn" style="padding:7px; font-size:12px;" onclick="openGuildView('bag')">🎒 Рюкзак и Склад Ордена${badge}</button>`;
     }
 }
 
@@ -81,7 +75,7 @@ function openGuildView(viewKey) {
     if (viewKey === 'pet' && typeof renderOwnerHubView === 'function') renderOwnerHubView('pet');
     else if (viewKey === 'ship' && typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
     else if (viewKey === 'bag' && typeof renderGuildBagView === 'function') renderGuildBagView();
-    else if (viewKey === 'skills') renderSkillsSection();
+    else renderComingSoonSection(viewKey);
 }
 
 function closeGuildView() {
@@ -104,17 +98,41 @@ function closeGuildView() {
     renderGuildHeaderStats();
 }
 
-function renderSkillsSection() {
-    document.getElementById('sub-view-title').innerText = "🌳 ДРЕВО НАВЫКОВ";
-    document.getElementById('sub-view-subtitle').innerText = "Перки Цитадели, Ратуши и Удачи";
+function renderComingSoonSection(key) {
+    const meta = {
+        skills: {
+            title: "🌳 ДРЕВО НАВЫКОВ",
+            sub: "Древние знания и перки Ордена",
+            icon: "🌳",
+            desc: "Здесь откроется ветвь развития всего Ордена Кхамача. Вы сможете усиливать доход золота в Ратуше, увеличивать удачу при поиске редких самоцветов, сокращать время космических походов Питомца и открывать пассивные боевые таланты."
+        },
+        altar: {
+            title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ",
+            sub: "Слияние стихий и благословение душ",
+            icon: "⛩️",
+            desc: "Священное место для ритуалов. Скоро здесь можно будет приносить в жертву накопленный Астральный Прах и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать временные благословения перед вылетом на Босса."
+        },
+        farm: {
+            title: "🌾 АСТРАЛЬНАЯ ФЕРМА",
+            sub: "Выращивание редких трав и алхимия",
+            icon: "🌾",
+            desc: "Личные угодья Ордена под куполом Цитадели. Здесь вы сможете высаживать космические семена, собирать урожай целебных кристаллов и самостоятельно варить Зелья исцеления, эликсиры ярости и лакомства для ускорения Питомца."
+        },
+        shop: {
+            title: "🏪 ЛАВКА ОРДЕНА",
+            sub: "Торговый пост контрабандистов Предела",
+            icon: "🏪",
+            desc: "Закрытый рынок для членов Ордена. Скоро здесь появится обмен Металлолома и золота на недостающие чертежи экипировки, сундуки с самоцветами, ремонтные наборы и редкие артефакты для Корабля и Питомца."
+        }
+    };
+    const info = meta[key] || meta.skills;
+    document.getElementById('sub-view-title').innerText = info.title;
+    document.getElementById('sub-view-subtitle').innerText = info.sub;
     document.getElementById('sub-view-body').innerHTML = `
-        <div class="card-box">
-            <strong style="color:#ffd700;">📜 Торговая Гильдия (Скоро)</strong>
-            <p style="margin:6px 0; font-size:11px;">Множитель выплат золота в Ратуше (x1.00 — x50.00) за пещерную руду.</p>
-        </div>
-        <div class="card-box">
-            <strong style="color:#2ecc71;">🍀 Благословение Искателя (Скоро)</strong>
-            <p style="margin:6px 0; font-size:11px;">Повышает шанс найти легендарные вещи, камни и зелья.</p>
+        <div class="card-box" style="text-align:center; padding:16px 12px;">
+            <div style="font-size:52px; margin-bottom:8px;">${info.icon}</div>
+            <div style="color:#ffd700; font-weight:bold; font-size:13px; margin-bottom:8px;">РАЗДЕЛ В РАЗРАБОТКЕ</div>
+            <p style="margin:0; font-size:12px; line-height:1.5; color:#cdb38c;">${info.desc}</p>
         </div>
     `;
 }
@@ -124,7 +142,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.0.0-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.3.0-BETA'}`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

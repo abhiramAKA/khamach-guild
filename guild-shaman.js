@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ШАМАН НАЛОЖЕНИЯ И ПЕРЕКОВКИ ЧАР (v1.2.1-BETA)
+   ОРДЕН КХАМАЧА — ШАМАН НАЛОЖЕНИЯ И ПЕРЕКОВКИ ЧАР (v1.6.0-BETA)
    ========================================================================== */
 
 function renderShamanSection() {
@@ -19,7 +19,7 @@ function renderShamanSection() {
             const rank = item.enchant ? item.enchant.rank : 0;
             const cost = (rank + 1) * 10;
             const canEnch = rank < 5 && dust >= cost;
-            const curLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${rank * 12}%)` : 'Нет чар';
+            const curLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${rank * 15}%)` : 'Нет чар';
 
             listHTML += `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px dashed #3a3025; font-size:11px;">
@@ -38,7 +38,7 @@ function renderShamanSection() {
     body.innerHTML = `
         <div class="card-box">
             <div style="color:#e58cff; font-weight:bold; margin-bottom:4px;">✨ Доступно Астрального Праха: ${dust}</div>
-            <div style="font-size:11px; color:#bfae96;">Шаман усиливает одну случайную боевую характеристику вещи (+12% за ранг, макс. 5 ранг). Прах добывается при разборке лишних вещей в рюкзаке.</div>
+            <div style="font-size:11px; color:#bfae96;">Шаман усиливает одну случайную боевую характеристику вещи (+15% за ранг, макс. 5 ранг). Прах добывается при разборке лишних вещей в рюкзаке.</div>
         </div>
         <div class="card-box">${listHTML}</div>
     `;
@@ -54,7 +54,7 @@ function enchantEquipItem(owner, slotKey) {
     const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
     if (rank >= 5 || dust < cost) return;
 
-    const statsKeys = ['atk', 'hp', 'def', 'reg'];
+    const statsKeys = ['atk', 'hp', 'reg'];
     const chosenStat = statsKeys[Math.floor(Math.random() * statsKeys.length)];
 
     localStorage.setItem('khamach_astral_dust', String(dust - cost));

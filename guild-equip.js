@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.4.0)
+   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И СЕТКА СНАРЯЖЕНИЯ (v2.4.1)
    ========================================================================== */
 
 function renderOwnerHubView(owner) {
@@ -74,14 +74,12 @@ function renderOwnerGearConfig(owner) {
     const isPet = owner === 'pet';
     setSubViewBack(owner, isPet ? '↩️ Назад к Питомцу' : '↩️ Назад к Кораблю');
     document.getElementById('sub-view-title').innerText = isPet ? "⚙️ СНАРЯЖЕНИЕ ПИТОМЦА" : "⚙️ МОДУЛИ КОРАБЛЯ";
-    document.getElementById('sub-view-subtitle').innerText = "Нажмите на вещь для просмотра и улучшения";
+    document.getElementById('sub-view-subtitle').innerText = "Нажмите на ячейку для осмотра и улучшения";
 
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);
     const equip = getEquipStorage(owner);
-
     const slotsHTML = typeof buildOwnerSlotsHTML === 'function' ? buildOwnerSlotsHTML(owner, equip) : '';
-    const skillsHTML = typeof buildActiveSkillsHTML === 'function' ? buildActiveSkillsHTML(stats.setCounts) : '';
 
     body.innerHTML = `
         <div class="card-box">
@@ -90,11 +88,8 @@ function renderOwnerGearConfig(owner) {
                 <div>❤️ Жизнь<br><strong>${stats.hp}</strong></div>
                 <div>💚 Реген<br><strong>${stats.reg}</strong></div>
             </div>
-            <div style="background:rgba(15,12,20,0.7); border:1px dashed #4a3f2c; padding:5px 7px; border-radius:3px; font-size:10px; margin-top:6px; line-height:1.4;">
-                <strong style="color:#e6c280;">⚡ Активные умения:</strong><br>${skillsHTML}
-            </div>
         </div>
-        <div class="card-box">
+        <div class="gear-grid">
             ${slotsHTML}
         </div>
     `;

@@ -1,6 +1,25 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЮКЗАК: КОРМ, ЧЕРТЕЖИ, КАМНИ И СРАВНЕНИЕ ВЕЩЕЙ (v2.9.6)
+   ОРДЕН КХАМАЧА — РЮКЗАК: ИНДИКАТОРЫ (🟢/🔴/⚪), КАМНИ И ПРИПАСЫ (v2.9.9)
    ========================================================================== */
+
+function getSingleItemPowerScore(owner, slotKey, itemObj) {
+    if (!itemObj || (itemObj.lvl || 1) < 1) return 0;
+    const sMeta = EQUIP_SLOTS[owner].find(s => s.key === slotKey);
+    const rarMeta = RARITY_TIERS[itemObj.rarity || 1] || RARITY_TIERS;
+    const lvl = itemObj.lvl || 1;
+    const lvlMult = (1 + (lvl - 1) * 0.4) * rarMeta.mult;
+
+    let score = Math.round(sMeta.baseVal * lvlMult) + Math.round(sMeta.subVal * lvlMult);
+    if (Array.isArray(itemObj.gems)) {
+        itemObj.gems.forEach(gObj => {
+            if (gObj) score += getGemBonusValue(gObj.rank || 1);
+        });
+    }
+    if (itemObj.enchant && itemObj.enchant.rank > 0) {
+        score += Math.min(lvl, itemObj.enchant.rank) * 2;
+    }
+    return score;
+}
 
 function renderGuildBagView() {
     setSubViewBack('main', 'Назад в Орден');
@@ -65,6 +84,15 @@ function renderGuildBagView() {
             const equipped = equip[bItem.slotKey];
             const eqRarRank = equipped ? (equipped.rarity || 1) : 0;
 
+            const bagPower = getSingleItemPowerScore(owner, bItem.slotKey, bItem);
+            const eqPower = getSingleItemPowerScore(owner, bItem.slotKey, equipped);
+            let trendBadge = `<span title="Равно по силе (${bagPower} = ${eqPower})">⚪</span>`;
+            if (bagPower > eqPower) {
+                trendBadge = `<span title="Сильнее надетой (${bagPower} > ${eqPower})">🟢</span>`;
+            } else if (bagPower < eqPower) {
+                trendBadge = `<span title="Слабее надетой (${bagPower} < ${eqPower})">🔴</span>`;
+            }
+
             let btns = '';
             if (!equipped || equipped.lvl < 1) {
                 btns += `<button class="mini-btn green-btn" onclick="bagEquipDirectByIdx(${realIdx})">Надеть</button>`;
@@ -82,7 +110,7 @@ function renderGuildBagView() {
 
             return `
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px dashed #2e251d; font-size:11px; gap:4px;">
-                    <span style="color:${setMeta.color};">${ownerTag} ${bRar.tag} ${sMeta.icon} ${sMeta.name}${lvlBadge} [${setMeta.name}]</span>
+                    <span style="color:${setMeta.color};">${trendBadge} ${ownerTag} ${bRar.tag} ${sMeta.icon} ${sMeta.name}${lvlBadge} [${setMeta.name}]</span>
                     <div style="display:flex; gap:3px; flex-shrink:0;">
                         ${btns}
                         <button class="mini-btn back-tint" onclick="bagSalvageByRealIdx(${realIdx})" title="Разобрать на Лом">🔩+${bRar.itemScrap}</button>

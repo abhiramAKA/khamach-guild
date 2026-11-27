@@ -1,10 +1,10 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ВЛАДЕНИЯ: ЛИНИЯ ФРОНТА СНИЗУ И 5 ПОСТРОЕК (v2.9.0)
+   ОРДЕН КХАМАЧА — ВЛАДЕНИЯ: ВЫТЯНУТАЯ КАРТА 63 ГЕКСА (11 РЯДОВ) (v2.9.2)
    ========================================================================== */
 
-const HEX_TOTAL = 37;
-const HEX_ROW_COUNTS = '4,5,6,7,6,5,4';
-const BASE_ENERGY_CAP = 20;
+const HEX_TOTAL = 63;
+const HEX_ROW_COUNTS = '4,5,6,7,6,7,6,7,6,5,4';
+const BASE_ENERGY_CAP = 25;
 
 let hexHoldTimer = null;
 
@@ -13,10 +13,10 @@ function stopHexHoldLoop() {
 }
 
 function getSpecialHexType(idx) {
-    if (idx === 18) return 'castle';
-    if (idx === 4)  return 'tower';
-    if (idx === 14) return 'mine';
-    if (idx === 22) return 'shrine';
+    if (idx === 31) return 'castle';               // Центр карты — Цитадель
+    if (idx === 15 || idx === 47) return 'tower';  // 2 Сторожевые башни
+    if (idx === 22 || idx === 40) return 'mine';   // 2 Рудные жилы
+    if (idx === 10) return 'shrine';               // Источник силы
     return '';
 }
 
@@ -30,7 +30,6 @@ function setHexOwnedAt(hexes, idx, val) {
     }
 }
 
-// Координаты каждого из 37 гексов для точного поиска всех 6 соседей
 function getHexCoordsList() {
     const counts = HEX_ROW_COUNTS.split(',').map(Number);
     const list = [];
@@ -54,10 +53,10 @@ function areHexesAdjacent(idxA, idxB) {
     return (dr === 0 && dx === 2) || (dr === 1 && dx === 1);
 }
 
-// Сектор доступен для захвата, если он в самом нижнем ряду (индексы 33..36) ИЛИ граничит с захваченным
+// Старт с самого нижнего ряда (индексы 59..62) или от любой соседней захваченной клетки
 function isHexReachable(hexes, idx) {
     if (isHexOwnedAt(hexes, idx)) return false;
-    if (idx >= 33 && idx <= 36) return true;
+    if (idx >= 59 && idx <= 62) return true;
     for (let i = 0; i < HEX_TOTAL; i++) {
         if (isHexOwnedAt(hexes, i) && areHexesAdjacent(i, idx)) return true;
     }
@@ -65,7 +64,7 @@ function isHexReachable(hexes, idx) {
 }
 
 function getMaxLandEnergy(hexes) {
-    return isHexOwnedAt(hexes, 22) ? BASE_ENERGY_CAP + 5 : BASE_ENERGY_CAP;
+    return isHexOwnedAt(hexes, 10) ? BASE_ENERGY_CAP + 5 : BASE_ENERGY_CAP;
 }
 
 function getEnergyRegenIntervalMs(st) {
@@ -76,14 +75,15 @@ function getEnergyRegenIntervalMs(st) {
 
 function getBarbarianRaidIntervalMs(st) {
     let mins = Math.max(8, 30 - (st.level - 1) * 2.5);
-    if (isHexOwnedAt(st.hexes, 4)) mins = Math.round(mins * 1.3);
+    const towers = (isHexOwnedAt(st.hexes, 15) ? 1 : 0) + (isHexOwnedAt(st.hexes, 47) ? 1 : 0);
+    if (towers > 0) mins = Math.round(mins * (1 + towers * 0.2));
     return Math.round(mins) * 60000;
 }
 
 function getGuildLandsState() {
     const now = Date.now();
     let st = null;
-    try { st = JSON.parse(localStorage.getItem('khamach_guild_lands_37')); } catch (e) {}
+    try { st = JSON.parse(localStorage.getItem('khamach_guild_lands_63')); } catch (e) {}
 
     if (!st || !Array.isArray(st.hexes) || st.hexes.length !== HEX_TOTAL) {
         st = {
@@ -114,7 +114,8 @@ function getGuildLandsState() {
     const mineHours = Math.floor((now - (st.lastMineTs || now)) / 3600000);
     if (mineHours > 0) {
         st.lastMineTs += mineHours * 3600000;
-        if (isHexOwnedAt(st.hexes, 14)) setScrapMetal(getScrapMetal() + mineHours * 3);
+        const activeMines = (isHexOwnedAt(st.hexes, 22) ? 1 : 0) + (isHexOwnedAt(st.hexes, 40) ? 1 : 0);
+        if (activeMines > 0) setScrapMetal(getScrapMetal() + mineHours * 3 * activeMines);
     }
 
     const raidInterval = getBarbarianRaidIntervalMs(st);
@@ -125,7 +126,7 @@ function getGuildLandsState() {
         for (let rIdx = 0; rIdx < raids; rIdx++) {
             if (Math.random() < trapChance) continue;
             const ownedCount = st.hexes.filter(Boolean).length;
-            const candidates = st.hexes.map((v, i) => (v && !(i === 18 && ownedCount > 10)) ? i : -1).filter(i => i !== -1);
+            const candidates = st.hexes.map((v, i) => (v && !(i === 31 && ownedCount > 15)) ? i : -1).filter(i => i !== -1);
             if (candidates.length === 0) break;
 
             const perRaid = Math.max(1, 3 - Math.floor((st.bld.walls || 0) / 2));
@@ -136,10 +137,10 @@ function getGuildLandsState() {
                 setHexOwnedAt(st.hexes, hIdx, false);
             }
             if (Math.random() < 0.4) {
-                const keys = ['walls', 'militia', 'scout', 'condenser', 'traps'].filter(k => (st.bld[k] || 0) > 0);
+                const keys = ['walls', 'militia', 'scout', 'condenser', 'traps'].filter(k => (st.bld.walls || 0) > 0 || (st.bld.militia || 0) > 0 || (st.bld.scout || 0) > 0 || (st.bld.condenser || 0) > 0 || (st.bld.traps || 0) > 0);
                 if (keys.length > 0) {
                     const hitKey = keys.at(Math.floor(Math.random() * keys.length));
-                    st.bld[hitKey] = Math.max(0, st.bld[hitKey] - 1);
+                    if (st.bld[hitKey] > 0) st.bld[hitKey] -= 1;
                 }
             }
         }
@@ -155,10 +156,10 @@ function getGuildLandsState() {
         st.chieftainIdx = -1;
     }
 
-    localStorage.setItem('khamach_guild_lands_37', JSON.stringify(st));
+    localStorage.setItem('khamach_guild_lands_63', JSON.stringify(st));
     return st;
 }
 
 function saveGuildLandsState(st) {
-    localStorage.setItem('khamach_guild_lands_37', JSON.stringify(st));
+    localStorage.setItem('khamach_guild_lands_63', JSON.stringify(st));
 }

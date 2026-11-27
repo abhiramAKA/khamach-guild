@@ -51,12 +51,12 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
 .tile-label { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
 
 .gear-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; width: 100%;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%;
 }
 
 .gear-tile {
-    aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 4px; border-radius: 5px; cursor: pointer; position: relative;
+    aspect-ratio: 1.45 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; padding: 6px; border-radius: 5px; cursor: pointer; position: relative;
     transition: transform 0.12s ease;
 }
 .gear-tile:active { transform: scale(0.96); }

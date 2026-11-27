@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — 6 РЕДКОСТЕЙ, КРУГЛЫЕ КАМНИ (🟠/⚪/⚫) И ЧАРЫ +5% (v2.5.0)
+   ОРДЕН КХАМАЧА — 6 РЕДКОСТЕЙ, УРОВНИ И ШКАЛА ОПЫТА ПИТОМЦА/КОРАБЛЯ (v2.8.0)
    ========================================================================== */
 
 const EQUIP_SLOTS = {
@@ -38,12 +38,51 @@ const RARITY_TIERS = {
 };
 
 const GEMS_META = {
-    amber: { key: 'amber', name: 'Янтарь ярости',   icon: '🟠', stat: 'atk' },
-    pearl: { key: 'pearl', name: 'Лунный жемчуг',  icon: '⚪', stat: 'hp' },
+    amber: { key: 'amber', name: 'Янтарь ярости',    icon: '🟠', stat: 'atk' },
+    pearl: { key: 'pearl', name: 'Лунный жемчуг',   icon: '⚪', stat: 'hp' },
     onyx:  { key: 'onyx',  name: 'Чёрный обсидиан', icon: '⚫', stat: 'reg' }
 };
 
 const STAT_LABELS = { atk: '⚔️ Атака', hp: '❤️ Жизнь', reg: '💚 Реген' };
+const OWNER_XP_TABLE = { 1: 100, 2: 200, 3: 350, 4: 550, 5: 800, 6: 1100 };
+
+function getOwnerLevelInfo(owner) {
+    let data = { lvl: 1, xp: 0 };
+    try {
+        const raw = JSON.parse(localStorage.getItem(`khamach_${owner}_lvl_xp`));
+        if (raw && raw.lvl >= 1) data = raw;
+    } catch (e) {}
+    const req = data.lvl >= 7 ? 0 : (OWNER_XP_TABLE[data.lvl] || 1100);
+    return { lvl: Math.min(7, data.lvl), xp: data.xp, req: req };
+}
+
+function addOwnerXp(owner, amount) {
+    const info = getOwnerLevelInfo(owner);
+    if (info.lvl >= 7) return info;
+    info.xp += amount;
+    while (info.lvl < 7) {
+        const need = OWNER_XP_TABLE[info.lvl] || 1100;
+        if (info.xp >= need) {
+            info.xp -= need;
+            info.lvl += 1;
+        } else {
+            break;
+        }
+    }
+    if (info.lvl >= 7) info.xp = 0;
+    localStorage.setItem(`khamach_${owner}_lvl_xp`, JSON.stringify({ lvl: info.lvl, xp: info.xp }));
+    return getOwnerLevelInfo(owner);
+}
+
+function getUpgradeTokens(owner) {
+    const key = owner === 'pet' ? 'khamach_pet_food_cnt' : 'khamach_ship_bp_cnt';
+    return parseInt(localStorage.getItem(key) || '0');
+}
+
+function setUpgradeTokens(owner, val) {
+    const key = owner === 'pet' ? 'khamach_pet_food_cnt' : 'khamach_ship_bp_cnt';
+    localStorage.setItem(key, String(Math.max(0, val)));
+}
 
 function rollPetTripRarity() {
     const r = Math.random() * 100;
@@ -82,25 +121,11 @@ function saveGemsList(arr) {
     localStorage.setItem('khamach_guild_gems_v4', JSON.stringify(arr));
 }
 
-function getScrapMetal() {
-    return parseInt(localStorage.getItem('khamach_scrap_metal') || '0');
-}
-
-function setScrapMetal(val) {
-    localStorage.setItem('khamach_scrap_metal', String(Math.max(0, val)));
-}
-
-function getHealPotions() {
-    return parseInt(localStorage.getItem('khamach_heal_potions') || '0');
-}
-
-function setHealPotions(val) {
-    localStorage.setItem('khamach_heal_potions', String(Math.max(0, val)));
-}
-
-function getGemBonusValue(rank) {
-    return (RARITY_TIERS[rank] || RARITY_TIERS).gemBonus;
-}
+function getScrapMetal() { return parseInt(localStorage.getItem('khamach_scrap_metal') || '0'); }
+function setScrapMetal(val) { localStorage.setItem('khamach_scrap_metal', String(Math.max(0, val))); }
+function getHealPotions() { return parseInt(localStorage.getItem('khamach_heal_potions') || '0'); }
+function setHealPotions(val) { localStorage.setItem('khamach_heal_potions', String(Math.max(0, val))); }
+function getGemBonusValue(rank) { return (RARITY_TIERS[rank] || RARITY_TIERS).gemBonus; }
 
 function calculateOwnerStats(owner) {
     const base = { atk: 5, hp: 5, reg: 5 };
@@ -110,7 +135,6 @@ function calculateOwnerStats(owner) {
     EQUIP_SLOTS[owner].forEach(slotMeta => {
         const item = equip[slotMeta.key];
         if (!item || item.lvl < 1) return;
-
         const dur = item.durability !== undefined ? item.durability : 100;
         if (dur <= 0) return;
 
@@ -118,7 +142,6 @@ function calculateOwnerStats(owner) {
         const lvlMult = (1 + (item.lvl - 1) * 0.4) * rarMult;
         base[slotMeta.baseStat] += Math.round(slotMeta.baseVal * lvlMult);
         base[slotMeta.subStat] += Math.round(slotMeta.subVal * lvlMult);
-
         if (item.set && setCounts[item.set] !== undefined) setCounts[item.set]++;
 
         if (Array.isArray(item.gems)) {
@@ -128,16 +151,12 @@ function calculateOwnerStats(owner) {
                 if (gm) base[gm.stat] += getGemBonusValue(gObj.rank || 1);
             });
         }
-
         if (item.enchant && item.enchant.stat && item.enchant.rank > 0) {
             const effRank = Math.min(item.lvl, item.enchant.rank);
             base[item.enchant.stat] = Math.round(base[item.enchant.stat] * (1 + effRank * 0.05));
         }
     });
-
     return { atk: base.atk, hp: base.hp, reg: base.reg, setCounts: setCounts };
 }
 
-function getOwnerPowerScore(stats) {
-    return stats.atk + stats.hp + stats.reg;
-}
+function getOwnerPowerScore(stats) { return stats.atk + stats.hp + stats.reg; }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ КОРАБЛЯ С БЕСКОНЕЧНЫМ БОССОМ (v2.0.4-BETA)
+   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ: ВОЛНА РАЗ В 10 СЕК И БАЛАНС РЕГЕНА (v2.1.3)
    ========================================================================== */
 
 let shipLoopId = null;
@@ -36,15 +36,16 @@ window.startShipMinigame = function() {
     };
 
     const burnDps = cfg.flameCnt * 1.5;
-    const vampHeal = cfg.abyssCnt * 0.5;
+    const vampHeal = cfg.abyssCnt * 0.4;
     const critGain = cfg.stormCnt * 3;
     const critMult = 1.5 + cfg.stormCnt * 0.15;
     const shieldCd = cfg.frostCnt > 0 ? Math.max(5, 17 - cfg.frostCnt) * 60 : 0;
 
     const state = {
         px: 180, py: 205, hp: cfg.maxHP, moveDir: 0,
-        bx: 180, by: 42, bDir: 1.6,
-        damageDealt: 0, rageStage: 0,
+        bx: 180, by: 42, bDir: 1.7,
+        damageDealt: 0, waveCount: 0,
+        novaWarning: 0, novaWaveY: 0, novaWaveHit: false,
         critCharge: 0, shotCount: 0,
         shieldReady: cfg.frostCnt > 0, shieldTimer: 0,
         pBullets: [], bBullets: [], frame: 0
@@ -56,9 +57,23 @@ window.startShipMinigame = function() {
     function tick() {
         if (!window.shipGameRunning) return;
         state.frame++;
-        state.rageStage = Math.floor(state.frame / 900);
-        const bossDmg = 2 + state.rageStage;
-        const fireRate = Math.max(26, 52 - state.rageStage * 4);
+
+        // Каждые 10 секунд (600 кадров): за 1.5 сек предупреждение, на 600-м кадре — Астральная Волна
+        const cyclePos = state.frame % 600;
+        if (cyclePos >= 510 && cyclePos < 600) {
+            state.novaWarning = 600 - cyclePos;
+        } else {
+            state.novaWarning = 0;
+        }
+        if (cyclePos === 0) {
+            state.waveCount++;
+            state.novaWaveY = state.by + 16;
+            state.novaWaveHit = false;
+            if (typeof playShipFX === 'function') playShipFX('hit');
+        }
+
+        const bulletDmg = 5 + Math.floor(state.waveCount / 2);
+        const fireRate = Math.max(24, 48 - state.waveCount * 3);
 
         if (state.frame % 60 === 0) {
             if (burnDps > 0) state.damageDealt += burnDps;
@@ -71,8 +86,10 @@ window.startShipMinigame = function() {
             }
         }
 
-        if (state.frame % 180 === 0 && state.hp < cfg.maxHP) {
-            state.hp = Math.min(cfg.maxHP, Number((state.hp + cfg.totalReg * 0.25).toFixed(1)));
+        // Регенерация раз в 6 секунд (360 кадров) на 15% от параметра Регена
+        if (state.frame % 360 === 0 && state.hp < cfg.maxHP) {
+            const healTick = Math.max(0.2, Number((cfg.totalReg * 0.15).toFixed(1)));
+            state.hp = Math.min(cfg.maxHP, Number((state.hp + healTick).toFixed(1)));
         }
 
         state.px = Math.max(22, Math.min(338, state.px + state.moveDir * 4.5));
@@ -91,11 +108,26 @@ window.startShipMinigame = function() {
         }
 
         if (state.frame % fireRate === 0) {
-            state.bBullets.push({ x: state.bx + (Math.random() * 48 - 24), y: state.by + 16 });
+            state.bBullets.push({ x: state.bx + (Math.random() * 52 - 26), y: state.by + 16 });
         }
 
         if (typeof renderShipBattleFrame === 'function') {
             renderShipBattleFrame(ctx, canvas, state, cfg);
+        }
+
+        if (state.novaWaveY > 0) {
+            state.novaWaveY += 4.2;
+            if (!state.novaWaveHit && Math.abs(state.novaWaveY - state.py) < 12) {
+                state.novaWaveHit = true;
+                let waveDmg = 1 + state.waveCount;
+                if (state.shieldReady) {
+                    state.shieldReady = false;
+                    waveDmg = Math.max(1, Math.ceil(waveDmg * 0.5));
+                    if (typeof playShipFX === 'function') playShipFX('shield');
+                }
+                state.hp = Number((state.hp - waveDmg).toFixed(1));
+            }
+            if (state.novaWaveY > canvas.height) state.novaWaveY = 0;
         }
 
         state.pBullets = state.pBullets.filter(b => {
@@ -125,7 +157,7 @@ window.startShipMinigame = function() {
 
         ctx.fillStyle = "#ff4500";
         state.bBullets = state.bBullets.filter(b => {
-            b.y += 3.1 + Math.min(1.5, state.rageStage * 0.25);
+            b.y += 3.2 + Math.min(1.6, state.waveCount * 0.25);
             ctx.beginPath();
             ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
             ctx.fill();
@@ -134,7 +166,7 @@ window.startShipMinigame = function() {
                     state.shieldReady = false;
                     if (typeof playShipFX === 'function') playShipFX('shield');
                 } else {
-                    state.hp = Number((state.hp - bossDmg).toFixed(1));
+                    state.hp = Number((state.hp - bulletDmg).toFixed(1));
                     if (typeof playShipFX === 'function') playShipFX('hit');
                 }
                 return false;

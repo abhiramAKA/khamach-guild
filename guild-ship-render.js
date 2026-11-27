@@ -1,9 +1,29 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ КОРАБЛЯ С БОССОМ (v2.0.4-BETA)
+   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ И АСТРАЛЬНОЙ ВОЛНЫ (v2.1.2-BETA)
    ========================================================================== */
 
 function renderShipBattleFrame(ctx, canvas, state, cfg) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (state.novaWarning > 0) {
+        ctx.strokeStyle = "rgba(255, 60, 60, 0.85)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(state.bx, state.by + 4, 24 + (state.novaWarning % 15), 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "#ff4500";
+        ctx.font = "bold 11px Georgia";
+        ctx.textAlign = "center";
+        ctx.fillText("⚠️ АСТРАЛЬНАЯ ВОЛНА!", 180, 76);
+    }
+
+    if (state.novaWaveY > 0) {
+        ctx.fillStyle = "rgba(255, 40, 40, 0.55)";
+        ctx.fillRect(0, state.novaWaveY - 8, canvas.width, 16);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, state.novaWaveY - 2, canvas.width, 4);
+    }
 
     ctx.font = "32px serif";
     ctx.textAlign = "center";
@@ -23,7 +43,7 @@ function renderShipBattleFrame(ctx, canvas, state, cfg) {
     const curDmg = Math.floor(state.damageDealt);
     const tierInfo = typeof getShipLootTierByDamage === 'function'
         ? getShipLootTierByDamage(curDmg)
-        : { label: '🎁 40%', nextGoal: 500 };
+        : { label: 'Без награды', nextGoal: 1500 };
     const goalStr = tierInfo.nextGoal > 0 ? '-> ' + tierInfo.nextGoal : 'МАКС!';
 
     ctx.fillStyle = "rgba(0,0,0,0.65)";
@@ -36,7 +56,7 @@ function renderShipBattleFrame(ctx, canvas, state, cfg) {
 
     ctx.fillStyle = "#ff8c8c";
     ctx.textAlign = "right";
-    ctx.fillText('Ярость:' + (state.rageStage + 1), 346, 16);
+    ctx.fillText('Волна:' + state.waveCount, 346, 16);
 
     if (cfg.stormCnt > 0) {
         const barW = Math.floor(340 * (state.critCharge / 100));

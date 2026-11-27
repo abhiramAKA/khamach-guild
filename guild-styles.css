@@ -68,18 +68,19 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
 .rar-5 { background: linear-gradient(to bottom, #423c0c, #211e05); border: 1px solid #ffe600; box-shadow: 0 0 11px rgba(255,230,0,0.55); }
 .rar-6 { background: linear-gradient(to bottom, #471414, #240909); border: 1px solid #ff3b3b; box-shadow: 0 0 13px rgba(255,59,59,0.65); }
 
-.hex-board { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; }
-.hex-row { display: flex; justify-content: center; gap: 6px; margin-top: -6px; }
+.hex-board { display: flex; flex-direction: column; align-items: center; padding: 4px 0; }
+.hex-row { display: flex; justify-content: center; gap: 4px; margin-top: -7px; }
 .hex-row:first-child { margin-top: 0; }
 .hex-cell {
-    width: 48px; height: 54px;
+    width: 40px; height: 45px;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 16px; font-weight: bold; cursor: pointer; transition: transform 0.12s ease;
+    font-size: 14px; font-weight: bold; cursor: pointer; transition: transform 0.1s ease;
 }
 .hex-cell:active { transform: scale(0.92); }
 .hex-owned { background: linear-gradient(to bottom, #2c5e2e, #163317); color: #a8f0aa; }
 .hex-enemy { background: linear-gradient(to bottom, #6e2222, #381010); color: #ffb3ba; }
+.hex-boss  { background: linear-gradient(to bottom, #7a1238, #3d061a); color: #ffd700; }
 .hex-big {
     width: 118px; height: 132px; margin: 8px auto;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);

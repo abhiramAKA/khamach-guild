@@ -2,7 +2,7 @@
    ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ С ОСНОВНОЙ ЦИТАДЕЛЬЮ (v1.0.0-ALPHA)
    ========================================================================== */
 
-const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
+const MAIN_HUB_RETURN_URL = 'https://abhiramaka.github.io/abhiramburg/';
 
 function getSharedSquadLevel() {
     const t = parseInt(localStorage.getItem('khamach_hero_lvl_tank') || '1');

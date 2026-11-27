@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — СТУПЕНЧАТАЯ РЕДКОСТЬ ЛУТА ОТ УРОНА ПО БОССУ (v2.2.0-BETA)
+   ОРДЕН КХАМАЧА — СТУПЕНЧАТАЯ РЕДКОСТЬ ЛУТА ОТ УРОНА (500 / 1500 / 3500 / 7000)
    ========================================================================== */
 
 function applyPostBattleWear() {
@@ -23,12 +23,11 @@ function applyPostBattleWear() {
     });
 }
 
-function rollWeightedTierRarity(weights) {
-    // weights: [w1, w2, w3, w4] в сумме 100
+function rollWeightedTierRarity(w1, w2, w3, w4) {
     const r = Math.random() * 100;
-    if (r < weights) return 1;
-    if (r < weights + weights) return 2;
-    if (r < weights + weights + weights) return 3;
+    if (r < w1) return 1;
+    if (r < w1 + w2) return 2;
+    if (r < w1 + w2 + w3) return 3;
     return 4;
 }
 
@@ -38,9 +37,9 @@ function getShipLootTierByDamage(damageDealt) {
             stage: 4,
             label: 'Тир 4: 🎁🟦-🟨 + 💎100%',
             itemChance: 1.0,
-            itemWeights:,
+            iW: { w1: 0, w2: 40, w3: 45, w4: 15 },
             gemChance: 1.0,
-            gemWeights:,
+            gW: { w1: 0, w2: 40, w3: 45, w4: 15 },
             nextGoal: 0
         };
     }
@@ -49,9 +48,9 @@ function getShipLootTierByDamage(damageDealt) {
             stage: 3,
             label: 'Тир 3: 🎁⬜-🟪 + 💎70%',
             itemChance: 1.0,
-            itemWeights:,
+            iW: { w1: 35, w2: 45, w3: 20, w4: 0 },
             gemChance: 0.70,
-            gemWeights:,
+            gW: { w1: 50, w2: 35, w3: 15, w4: 0 },
             nextGoal: 7000
         };
     }
@@ -60,9 +59,9 @@ function getShipLootTierByDamage(damageDealt) {
             stage: 2,
             label: 'Тир 2: 🎁⬜-🟦 + 💎35%',
             itemChance: 1.0,
-            itemWeights:,
+            iW: { w1: 70, w2: 30, w3: 0, w4: 0 },
             gemChance: 0.35,
-            gemWeights:,
+            gW: { w1: 100, w2: 0, w3: 0, w4: 0 },
             nextGoal: 3500
         };
     }
@@ -71,19 +70,19 @@ function getShipLootTierByDamage(damageDealt) {
             stage: 1,
             label: 'Тир 1: 🎁⬜ (100%)',
             itemChance: 1.0,
-            itemWeights:,
+            iW: { w1: 100, w2: 0, w3: 0, w4: 0 },
             gemChance: 0,
-            gemWeights:,
+            gW: { w1: 100, w2: 0, w3: 0, w4: 0 },
             nextGoal: 1500
         };
     }
     return {
         stage: 0,
-        label: 'Цель: 500 урона',
+        label: 'Без награды',
         itemChance: 0,
-        itemWeights:,
+        iW: { w1: 100, w2: 0, w3: 0, w4: 0 },
         gemChance: 0,
-        gemWeights:,
+        gW: { w1: 100, w2: 0, w3: 0, w4: 0 },
         nextGoal: 500
     };
 }
@@ -107,7 +106,7 @@ function grantEndlessBossRewards(damageDealt) {
         const pSlots = EQUIP_SLOTS.pet;
         const s = pSlots[Math.floor(Math.random() * pSlots.length)];
         const stKey = sets[Math.floor(Math.random() * sets.length)];
-        const rar = rollWeightedTierRarity(tier.itemWeights);
+        const rar = rollWeightedTierRarity(tier.iW.w1, tier.iW.w2, tier.iW.w3, tier.iW.w4);
         const rMeta = ITEM_RARITIES[rar] || ITEM_RARITIES;
 
         const bag = getBagItems();
@@ -120,7 +119,7 @@ function grantEndlessBossRewards(damageDealt) {
         const gems = getGemsList();
         const gKeys = Object.keys(GEMS_META);
         const gType = gKeys[Math.floor(Math.random() * gKeys.length)];
-        const gRank = rollWeightedTierRarity(tier.gemWeights);
+        const gRank = rollWeightedTierRarity(tier.gW.w1, tier.gW.w2, tier.gW.w3, tier.gW.w4);
         gems.push({ type: gType, rank: gRank });
         saveGemsList(gems);
 
@@ -130,7 +129,7 @@ function grantEndlessBossRewards(damageDealt) {
     }
 
     if (report.length === 0) {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\nПродержитесь ~10–15 сек (500 урона) для гарантированной базовой вещи!`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\nДля гарантированной базовой вещи нужно нанести 500 урона!`);
     } else {
         alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (в Рюкзак):\n• ${report.join('\n• ')}`);
     }

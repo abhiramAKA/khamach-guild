@@ -1,6 +1,34 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ РЮКЗАКА, РЕМОНТА И ПОХОДА ПИТОМЦА (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ РЮКЗАКА, КОРМЛЕНИЯ, РЕМОНТА И ПОХОДА (v2.8.1)
    ========================================================================== */
+
+function consumeOwnerToken(owner, returnScreen) {
+    const tokens = getUpgradeTokens(owner);
+    if (tokens <= 0) return;
+
+    const prevInfo = getOwnerLevelInfo(owner);
+    if (prevInfo.isPeak) {
+        alert("Шкала 7-го уровня уже заполнена на 100% — максимальный бонус +20% активен!");
+        return;
+    }
+
+    setUpgradeTokens(owner, tokens - 1);
+    const nextInfo = addOwnerXp(owner, 25);
+
+    const isPet = owner === 'pet';
+    if (nextInfo.lvl > prevInfo.lvl) {
+        alert(isPet
+            ? `🐉 Питомец вырос до ${nextInfo.lvl} уровня! Теперь можно улучшать его экипировку до ${nextInfo.lvl} ур.`
+            : `🚀 Корабль модернизирован до ${nextInfo.lvl} уровня! Теперь можно улучшать его модули до ${nextInfo.lvl} ур.`);
+    } else if (!prevInfo.isPeak && nextInfo.isPeak) {
+        alert(isPet
+            ? `🔥 ПИК СЫТОСТИ (7 Ур. 100%)! Питомец получил +20% ко всем характеристикам, пока шкала заполнена до упора!`
+            : `🔥 ПИК МОДЕРНИЗАЦИИ (7 Ур. 100%)! Корабль получил +20% ко всем характеристикам, пока шкала заполнена до упора!`);
+    }
+
+    if (returnScreen === 'bag' && typeof renderGuildBagView === 'function') renderGuildBagView();
+    else if (typeof renderOwnerHubView === 'function') renderOwnerHubView(owner);
+}
 
 function bagEquipByRealIdx(realIdx) {
     const allBag = getBagItems();
@@ -31,9 +59,10 @@ function bagMergeByRealIdx(realIdx) {
     if (!picked) return;
 
     const owner = picked.owner;
+    const maxOwnerLvl = getOwnerLevelInfo(owner).lvl;
     const equip = getEquipStorage(owner);
     const target = equip[picked.slotKey];
-    if (!target || target.lvl >= 7) return;
+    if (!target || target.lvl >= 7 || target.lvl >= maxOwnerLvl) return;
     if ((target.rarity || 1) !== (picked.rarity || 1)) return;
 
     target.lvl += 1;
@@ -51,7 +80,7 @@ function bagSalvageByRealIdx(realIdx) {
 
     const rarRank = picked.rarity || 1;
     const sMeta = EQUIP_SLOTS[picked.owner].find(s => s.key === picked.slotKey);
-    const rMeta = RARITY_TIERS[rarRank] || RARITY_TIERS[1];
+    const rMeta = RARITY_TIERS[rarRank] || RARITY_TIERS;
 
     if (!confirm(`Разобрать «${rMeta.name} ${sMeta.name}» на ${rMeta.itemScrap} 🔩 Металлолома?`)) return;
 
@@ -67,7 +96,7 @@ function bagSalvageGemByIdx(gIdx) {
     if (!gem) return;
 
     const gm = GEMS_META[gem.type] || GEMS_META.amber;
-    const rm = RARITY_TIERS[gem.rank] || RARITY_TIERS[1];
+    const rm = RARITY_TIERS[gem.rank] || RARITY_TIERS;
 
     if (!confirm(`Разобрать «${rm.name} ${gm.name} (+${rm.gemBonus})» на ${rm.gemScrap} 🔩 Металлолома?`)) return;
 
@@ -132,7 +161,7 @@ function claimPetSpaceLoot() {
         const s = shipSlots[Math.floor(Math.random() * shipSlots.length)];
         const stKey = sets[Math.floor(Math.random() * sets.length)];
         const rar = rollPetTripRarity();
-        const rMeta = RARITY_TIERS[rar] || RARITY_TIERS[1];
+        const rMeta = RARITY_TIERS[rar] || RARITY_TIERS;
         bag.push({ owner: 'ship', slotKey: s.key, set: stKey, rarity: rar });
         report.push(`${rMeta.tag} ${s.icon} ${s.name} [${EQUIP_SETS[stKey].name}] (${rMeta.name})`);
     }

@@ -10,11 +10,11 @@ html, body {
 }
 
 .guild-window {
-    width: 95vw; max-width: 420px; max-height: 94vh;
+    width: 95vw; max-width: 420px; max-height: 95vh;
     background: radial-gradient(circle, #1a1512 0%, #0d0a08 100%);
     border: 4px solid #1a1613; outline: 2px solid #8a7350; outline-offset: -3px;
     box-shadow: 0 0 40px rgba(0,0,0,0.95), inset 0 0 25px rgba(0,0,0,0.8);
-    padding: 14px 12px; box-sizing: border-box; text-align: center;
+    padding: 12px 10px; box-sizing: border-box; text-align: center;
     display: flex; flex-direction: column; position: relative;
 }
 
@@ -22,28 +22,22 @@ html, body {
     display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;
 }
 
-h1 {
-    font-size: 20px; color: #e6c280; margin: 0; letter-spacing: 2px; font-weight: 900;
-    text-shadow: 0 2px 4px #000;
-}
-
-h2 {
-    font-size: 20px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px #000;
-}
+h1 { font-size: 19px; color: #e6c280; margin: 0; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 4px #000; }
+h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px #000; }
 
 .subtitle {
     font-size: 10px; color: #8a7350; letter-spacing: 1.5px; text-transform: uppercase;
-    border-bottom: 1px dashed #4a3f2c; padding-bottom: 6px; margin-bottom: 10px; display: block;
+    border-bottom: 1px dashed #4a3f2c; padding-bottom: 5px; margin-bottom: 8px; display: block;
 }
 
 .res-bar {
     display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
     background: rgba(0,0,0,0.45); border: 1px solid #3a3025; border-radius: 4px;
-    padding: 6px; margin-bottom: 12px; font-size: 11px; color: #cdb38c;
+    padding: 6px; margin-bottom: 10px; font-size: 11px; color: #cdb38c;
 }
 
 .guild-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; margin-bottom: 14px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; margin-bottom: 12px;
 }
 
 .tile-btn {
@@ -53,18 +47,24 @@ h2 {
     box-shadow: 0 5px 10px rgba(0,0,0,0.6); transition: all 0.15s ease;
 }
 
-.tile-btn:hover {
-    border-color: #cbb281; color: #fff; box-shadow: 0 0 15px rgba(203,178,129,0.45);
-}
-
+.tile-btn:hover { border-color: #cbb281; color: #fff; box-shadow: 0 0 15px rgba(203,178,129,0.45); }
 .tile-btn:active { transform: scale(0.97); }
-.tile-icon { font-size: 52px; line-height: 1; }
+.tile-icon { font-size: 50px; line-height: 1; }
 .tile-label { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
 
 .sub-body {
     flex: 1; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.4);
-    border: 1px solid #4a3f2c; border-radius: 4px; padding: 10px; margin-bottom: 12px;
-    font-size: 12px; color: #cdb38c; display: flex; flex-direction: column; gap: 8px;
+    border: 1px solid #4a3f2c; border-radius: 4px; padding: 8px; margin-bottom: 10px;
+    font-size: 12px; color: #cdb38c; display: flex; flex-direction: column; gap: 7px;
+}
+
+.card-box {
+    padding: 8px; border: 1px solid #544432; background: rgba(20,16,14,0.92); border-radius: 4px;
+}
+
+.stat-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;
+    background: rgba(0,0,0,0.5); padding: 6px; border-radius: 3px; font-size: 11px; margin: 5px 0;
 }
 
 .menu-btn, .mini-btn {
@@ -73,8 +73,11 @@ h2 {
     border: 1px solid #544432; border-radius: 4px; cursor: pointer;
 }
 
-.menu-btn { width: 100%; padding: 12px; font-size: 14px; }
-.mini-btn { padding: 6px 8px; font-size: 11px; }
+.menu-btn { width: 100%; padding: 10px; font-size: 13px; }
+.mini-btn { padding: 4px 7px; font-size: 10px; }
+.green-btn { background: linear-gradient(to bottom, #1d3a1e, #0f2110); border-color: #316e34; color: #fff; }
+.purple-btn { background: linear-gradient(to bottom, #2f1942, #170b21); border-color: #7d3cb5; color: #f0d6ff; }
+.disabled-btn { opacity: 0.4; cursor: not-allowed; }
 .gold-text { color: #ffd700; cursor: default; }
 
 .back-tint {
@@ -82,4 +85,10 @@ h2 {
     border-color: #6e3131; color: #e6aaaa;
 }
 
+.ship-canvas {
+    width: 100%; height: 245px; background: radial-gradient(circle at top, #1b1226 0%, #07050a 100%);
+    border: 1px solid #6d2a9c; border-radius: 4px; display: block; touch-action: none;
+}
+
+.ship-controls { display: flex; gap: 10px; margin-top: 6px; }
 .version-footer { font-size: 10px; color: #544432; text-align: center; }

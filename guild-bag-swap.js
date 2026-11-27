@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — СРАВНЕНИЕ ВЕЩЕЙ ПРИ ЗАМЕНЕ И СЛИЯНИЕ В РЮКЗАКЕ (v2.9.7)
+   ОРДЕН КХАМАЧА — СРАВНЕНИЕ ВЕЩЕЙ ПРИ ЗАМЕНЕ И СЛИЯНИЕ В РЮКЗАКЕ (v2.10.0)
    ========================================================================== */
 
 function buildItemCompareCardHTML(titleTag, owner, slotKey, itemObj, borderHighlight) {
@@ -13,7 +13,7 @@ function buildItemCompareCardHTML(titleTag, owner, slotKey, itemObj, borderHighl
     const sVal = Math.round(sMeta.subVal * lvlMult);
     const gemsCnt = Array.isArray(itemObj.gems) ? itemObj.gems.length : 0;
     const enchStr = (itemObj.enchant && itemObj.enchant.rank > 0)
-        ? `${STAT_LABELS[itemObj.enchant.stat]} (+${Math.min(lvl, itemObj.enchant.rank) * 5}%)` : 'Нет';
+        ? `${STAT_LABELS[itemObj.enchant.stat]} (+${Math.min(lvl, itemObj.enchant.rank) * 5})` : 'Нет';
 
     return `
         <div class="card-box" style="font-size:11px; line-height:1.45; border-color:${borderHighlight};">

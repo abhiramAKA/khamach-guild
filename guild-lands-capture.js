@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЗАХВАТ СЕКТОРА УДЕРЖАНИЕМ И ТРОФЕИ 63 ГЕКСОВ (v2.9.2)
+   ОРДЕН КХАМАЧА — ЗАХВАТ СЕКТОРА УДЕРЖАНИЕМ И ТРОФЕИ 63 ГЕКСОВ (v2.9.10)
    ========================================================================== */
 
 function openHexCaptureView(hexIdx) {
@@ -30,8 +30,8 @@ function openHexCaptureView(hexIdx) {
 
     let progress = 0;
     let holding = false;
-    const baseSpeed = isBoss ? 1.8 : 2.8;
-    const stepPerTick = Math.max(1.2, baseSpeed + (st.bld.militia || 0) * 0.45 - (st.level - 1) * 0.15);
+    const baseSpeed = isBoss ? 0.85 : 1.2;
+    const stepPerTick = Math.max(0.6, baseSpeed + (st.bld.militia || 0) * 0.35 - (st.level - 1) * 0.08);
 
     const holdBtn = document.getElementById('hex-hold-btn');
     const bigHex = document.getElementById('hex-capture-visual');
@@ -48,7 +48,7 @@ function openHexCaptureView(hexIdx) {
 
     hexHoldTimer = setInterval(() => {
         if (holding) progress = Math.min(100, progress + stepPerTick);
-        else if (progress > 0 && progress < 100) progress = Math.max(0, progress - 1.1);
+        else if (progress > 0 && progress < 100) progress = Math.max(0, progress - 0.9);
 
         if (barEl) barEl.style.width = progress.toFixed(0) + '%';
         if (pctEl) pctEl.innerText = progress.toFixed(0) + '%';

@@ -2,7 +2,7 @@
    ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.9.6-BETA)
    ========================================================================== */
 
-const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
+const MAIN_HUB_RETURN_URL = 'https://abhiramaka.github.io/abhiramburg/hub.html';
 const PET_EXPEDITION_MS = 3600000;
 let activeGuildTimer = null;
 window.currentSubBackTarget = 'main';

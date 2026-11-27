@@ -1,79 +1,102 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ОСНОВНОЙ ЭКРАН ПИТОМЦА И КОРАБЛЯ (v1.9.1-BETA)
+   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.0.0)
    ========================================================================== */
 
-function renderOwnerEquipView(owner) {
+function renderOwnerHubView(owner) {
     const isPet = owner === 'pet';
-    document.getElementById('sub-view-title').innerText = isPet ? "🐉 ПИТОМЕЦ ОРДЕНА" : "🚀 АСТРАЛЬНЫЙ КОРАБЛЬ";
-    document.getElementById('sub-view-subtitle').innerText = isPet ? "6 слотов, Ремонт и Космический Поход" : "6 модулей, Ремонт и Полёт на Босса";
+    setSubViewBack('main', 'Назад в Орден');
+    document.getElementById('sub-view-title').innerText = isPet ? "🐉 ПИТОМЕЦ" : "🚀 КОРАБЛЬ";
+    document.getElementById('sub-view-subtitle').innerText = isPet ? "Космические экспедиции" : "Охота на Бесконечного Босса";
 
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);
     const power = getOwnerPowerScore(stats);
-    const equip = getEquipStorage(owner);
-    const bag = getBagItems().filter(b => b.owner === owner);
-    const gems = getGemsList();
-    const potions = getHealPotions();
-    const scrap = getScrapMetal();
 
-    let topActionHTML = '';
+    let mainActionHTML = '';
+    let statusLine = '';
+
     if (isPet) {
         const expStart = parseInt(localStorage.getItem('khamach_pet_exp_start') || '0');
         const dropCount = Math.max(1, Math.min(3, Math.floor(power / 55) + 1));
+        statusLine = `Добыча за поход: <strong>до ${dropCount} обломков + 🧪 Зелье</strong>`;
+
         if (expStart > 0) {
             const elapsed = Date.now() - expStart;
             if (elapsed >= PET_EXPEDITION_MS) {
-                topActionHTML = `<button class="menu-btn green-btn" onclick="claimPetSpaceLoot()">🎁 ЗАБРАТЬ ДОБЫЧУ ИЗ КОСМОСА (до ${dropCount} предм. + 🧪)</button>`;
+                mainActionHTML = `<button class="menu-btn green-btn" onclick="claimPetSpaceLoot()">🎁 ЗАБРАТЬ ДОБЫЧУ ИЗ ПОХОДА</button>`;
             } else {
                 const rem = PET_EXPEDITION_MS - elapsed;
                 const m = Math.floor(rem / 60000).toString().padStart(2, '0');
                 const s = Math.floor((rem % 60000) / 1000).toString().padStart(2, '0');
-                topActionHTML = `<div id="pet-exp-timer" style="text-align:center; color:#ffd700; font-weight:bold; padding:7px; border:1px dashed #8a7350;">⏱️ В походе: ${m}:${s} (В бою с Боссом не помогает)</div>`;
+                mainActionHTML = `<div id="pet-exp-timer" style="text-align:center; color:#ffd700; font-weight:bold; padding:10px; border:1px dashed #8a7350; border-radius:4px;">⏱️ В походе: ${m}:${s}</div>`;
             }
         } else {
-            topActionHTML = `<button class="menu-btn green-btn" onclick="startPetSpaceTrip()">🌌 ОТПРАВИТЬ В ПОХОД НА 1 ЧАС (до ${dropCount} шт. + 🧪)</button>`;
+            mainActionHTML = `<button class="menu-btn green-btn" onclick="startPetSpaceTrip()">🌌 ОТПРАВИТЬ В ПРИКЛЮЧЕНИЕ (1 ЧАС)</button>`;
         }
     } else {
         const bestDmg = parseInt(localStorage.getItem('khamach_ship_best_dmg') || '0');
-        const petNote = isPetOnExpedition()
-            ? `<div style="font-size:10px; color:#ffb3ba; margin-bottom:5px;">⚠️ Питомец в походе — Корабль летит один! | 🧪 Зелий: ${potions}</div>`
-            : `<div style="font-size:10px; color:#2ecc71; margin-bottom:5px;">✅ Питомец дома (статы складываются) | 🧪 Зелий: ${potions}</div>`;
-        topActionHTML = `<div style="font-size:11px; color:#ffd700; margin-bottom:3px;">🏆 Рекорд урона: <strong>${bestDmg.toLocaleString('ru-RU')}</strong></div>${petNote}<button class="menu-btn purple-btn" onclick="window.launchShipRaidView()">🚀 В ПОЛЁТ НА БОССА</button>`;
+        const potions = getHealPotions();
+        const petState = isPetOnExpedition()
+            ? `<span style="color:#ffb3ba;">Питомец в походе (летите один)</span>`
+            : `<span style="color:#2ecc71;">Питомец в строю (+статы)</span>`;
+        statusLine = `🏆 Рекорд: <strong>${bestDmg.toLocaleString('ru-RU')}</strong> | 🧪 Зелий: <strong>${potions}</strong><br>${petState}`;
+        mainActionHTML = `<button id="start-boss-flight-btn" class="menu-btn purple-btn">🚀 В ПОЛЁТ НА БОССА</button>`;
     }
 
-    const slotsHTML = typeof buildOwnerSlotsHTML === 'function' ? buildOwnerSlotsHTML(owner, equip, gems, scrap) : '';
-    const bagHTML = typeof buildOwnerBagHTML === 'function' ? buildOwnerBagHTML(owner, bag, equip) : '';
-    const skillsHTML = typeof buildActiveSkillsHTML === 'function' ? buildActiveSkillsHTML(stats.setCounts) : '';
+    body.innerHTML = `
+        <div class="card-box" style="text-align:center; padding:14px 10px;">
+            <div style="font-size:56px; line-height:1; margin-bottom:6px;">${isPet ? '🐲' : '🚀'}</div>
+            <div style="font-size:15px; font-weight:bold; color:#ffd700; margin-bottom:4px;">Боевая Мощь: ⚡ ${power}</div>
+            <div style="font-size:11px; color:#cdb38c; line-height:1.45; margin-bottom:12px;">${statusLine}</div>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                ${mainActionHTML}
+                <button class="menu-btn" onclick="renderOwnerGearConfig('${owner}')">⚙️ Характеристики и Снаряжение</button>
+            </div>
+        </div>
+    `;
 
-    const gemsSummary = gems.length === 0
-        ? 'Нет'
-        : gems.slice(0, 6).map(g => `${GEMS_META[g.type].icon}${GEM_RARITIES[g.rank].tag}+${getGemBonusValue(g.type, g.rank)}`).join(' ');
+    if (!isPet) {
+        const flightBtn = document.getElementById('start-boss-flight-btn');
+        if (flightBtn) {
+            flightBtn.onclick = function() {
+                if (typeof launchShipRaidView === 'function') launchShipRaidView();
+            };
+        }
+    } else if (isPetOnExpedition() && typeof startPetExpTicker === 'function') {
+        startPetExpTicker();
+    }
+}
+
+function renderOwnerGearConfig(owner) {
+    const isPet = owner === 'pet';
+    setSubViewBack(owner, isPet ? '↩️ Назад к Питомцу' : '↩️ Назад к Кораблю');
+    document.getElementById('sub-view-title').innerText = isPet ? "⚙️ СНАРЯЖЕНИЕ ПИТОМЦА" : "⚙️ МОДУЛИ КОРАБЛЯ";
+    document.getElementById('sub-view-subtitle').innerText = "Ремонт, Камни, Чары и Статы";
+
+    const body = document.getElementById('sub-view-body');
+    const stats = calculateOwnerStats(owner);
+    const equip = getEquipStorage(owner);
+    const gems = getGemsList();
+    const scrap = getScrapMetal();
+    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
+
+    const slotsHTML = typeof buildOwnerSlotsHTML === 'function' ? buildOwnerSlotsHTML(owner, equip, gems, scrap, dust) : '';
+    const skillsHTML = typeof buildActiveSkillsHTML === 'function' ? buildActiveSkillsHTML(stats.setCounts) : '';
 
     body.innerHTML = `
         <div class="card-box">
-            <div style="display:flex; justify-content:space-between; font-weight:bold; color:#ffd700; font-size:12px;">
-                <span>Общая Мощь: ⚡ ${power}</span><span style="color:#cdb38c;">🔩 Лом: ${scrap}</span>
-            </div>
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:rgba(0,0,0,0.5); padding:6px; border-radius:3px; font-size:11px; margin:5px 0; text-align:center;">
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px; background:rgba(0,0,0,0.5); padding:6px; border-radius:3px; font-size:11px; text-align:center;">
                 <div>⚔️ Атака<br><strong>${stats.atk}</strong></div>
                 <div>❤️ Жизнь<br><strong>${stats.hp}</strong></div>
                 <div>💚 Реген<br><strong>${stats.reg}</strong></div>
             </div>
-            <div style="background:rgba(15,12,20,0.7); border:1px dashed #4a3f2c; padding:5px 7px; border-radius:3px; font-size:10px; margin-bottom:6px; line-height:1.4;">
-                <strong style="color:#e6c280;">⚡ Умения от целых вещей:</strong><br>${skillsHTML}
+            <div style="background:rgba(15,12,20,0.7); border:1px dashed #4a3f2c; padding:5px 7px; border-radius:3px; font-size:10px; margin-top:6px; line-height:1.4;">
+                <strong style="color:#e6c280;">⚡ Активные умения:</strong><br>${skillsHTML}
             </div>
-            ${topActionHTML}
         </div>
         <div class="card-box">
-            <div style="font-weight:bold; color:#e6c280; font-size:11px; margin-bottom:2px;">НАДЕТОЕ СНАРЯЖЕНИЕ (Макс. Ур. 7)</div>
-            <div style="font-size:10px; color:#8cd1ff; margin-bottom:4px;">Камни (${gems.length}): ${gemsSummary}</div>
+            <div style="font-size:10px; color:#8cd1ff; margin-bottom:4px;">🔩 Лом: ${scrap} | ✨ Прах: ${dust} | 💎 Камней: ${gems.length}</div>
             ${slotsHTML}
         </div>
-        <div class="card-box">
-            <div style="font-weight:bold; color:#e6c280; font-size:11px; margin-bottom:4px;">РЮКЗАК ДОБЫЧИ (${bag.length})</div>
-            ${bagHTML}
-        </div>
     `;
-
-    if (isPet && isPetOnExpedition() && typeof startPetExpTicker === 'function') startPetExpTicker();
 }

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — КВАДРАТНЫЕ ЯЧЕЙКИ ОДЕЖДЫ И КАРТОЧКА УМЕНИЯ (v2.4.1-BETA)
+   ОРДЕН КХАМАЧА — ПЛИТКИ ОДЕЖДЫ, ГНЁЗДА КАМНЕЙ И ВЫБОР ЧАР (v2.5.0-BETA)
    ========================================================================== */
 
 const SET_SKILL_DESC = {
@@ -14,13 +14,7 @@ function buildOwnerSlotsHTML(owner, equip) {
     EQUIP_SLOTS[owner].forEach(slot => {
         const item = equip[slot.key];
         if (!item || item.lvl < 1) {
-            gridHTML += `
-                <div class="gear-tile empty">
-                    <span style="font-size:26px; filter:grayscale(1);">${slot.icon}</span>
-                    <span style="font-size:10px; font-weight:bold;">${slot.name}</span>
-                    <span style="font-size:9px;">Пусто</span>
-                </div>
-            `;
+            gridHTML += `<div class="gear-tile empty"><span style="font-size:26px; filter:grayscale(1);">${slot.icon}</span><span style="font-size:10px; font-weight:bold;">${slot.name}</span><span style="font-size:9px;">Пусто</span></div>`;
             return;
         }
         const setMeta = EQUIP_SETS[item.set] || EQUIP_SETS.flame;
@@ -49,7 +43,7 @@ function renderItemDetailView(owner, slotKey) {
     if (!item || !slotMeta) return;
 
     const setMeta = EQUIP_SETS[item.set] || EQUIP_SETS.flame;
-    const rarMeta = ITEM_RARITIES[item.rarity || 1] || ITEM_RARITIES;
+    const rarMeta = RARITY_TIERS[item.rarity || 1] || RARITY_TIERS[1];
     const dur = item.durability !== undefined ? item.durability : 100;
     const isBroken = dur <= 0;
 
@@ -59,50 +53,48 @@ function renderItemDetailView(owner, slotKey) {
 
     const maxSockets = Math.max(0, item.lvl - 1);
     const usedGems = item.gems || [];
-    let socketsHTML = maxSockets === 0 ? 'Гнёзда откроются со 2-го уровня вещи.' : '';
+    let socketsHTML = maxSockets === 0 ? '<div style="color:#6a5335;">Гнёзда откроются со 2-го уровня вещи.</div>' : '<div class="gem-grid" style="margin-top:5px;">';
     for (let i = 0; i < maxSockets; i++) {
-        if (usedGems[i]) {
-            const gm = GEMS_META[usedGems[i].type];
-            const rm = GEM_RARITIES[usedGems[i].rank] || GEM_RARITIES;
-            socketsHTML += `<div>${gm.icon} ${rm.name} ${gm.name} (+${rm.bonus} ${STAT_LABELS[gm.stat]})</div>`;
+        const gObj = usedGems[i];
+        const clickAttr = !isBroken ? `onclick="openGemSelectMenu('${owner}','${slotKey}',${i})"` : '';
+        if (gObj) {
+            const gm = GEMS_META[gObj.type];
+            const rm = RARITY_TIERS[gObj.rank] || RARITY_TIERS[1];
+            socketsHTML += `<div class="gem-tile rar-${rm.rank}" ${clickAttr} title="Нажмите для замены"><span style="font-size:20px;">${gm.icon}</span><span style="font-size:9px; color:#fff;">+${rm.gemBonus}</span></div>`;
         } else {
-            socketsHTML += `<div style="color:#6a5335;">⬜ Пустое гнездо</div>`;
+            socketsHTML += `<div class="gem-tile empty" style="opacity:0.85; cursor:pointer;" ${clickAttr}><span style="font-size:16px;">➕</span><span style="font-size:9px;">Гнездо</span></div>`;
         }
     }
+    if (maxSockets > 0) socketsHTML += '</div>';
 
     const scrap = getScrapMetal();
-    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
-    const gems = getGemsList();
-
     const repairCost = Math.max(2, Math.ceil((100 - dur) / 10) * 2);
-    const enchRank = item.enchant ? item.enchant.rank : 0;
-    const enchCost = (enchRank + 1) * 10;
-    const enchLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${enchRank * 15}%)` : 'Нет чар';
-    const skillFullDesc = SET_SKILL_DESC[item.set] || '';
+    const effEnchRank = item.enchant ? Math.min(item.lvl, item.enchant.rank) : 0;
+    const enchLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${effEnchRank * 5}% | Ур.${effEnchRank})` : 'Нет чар';
+    const enchCost = item.lvl * 10;
 
     document.getElementById('sub-view-title').innerText = `${slotMeta.icon} ${slotMeta.name}`;
-    document.getElementById('sub-view-subtitle').innerText = `${rarMeta.name} вещь | Стихия: ${setMeta.name}`;
+    document.getElementById('sub-view-subtitle').innerText = `${rarMeta.name} | Стихия: ${setMeta.name}`;
 
     document.getElementById('sub-view-body').innerHTML = `
         <div class="card-box" style="font-size:12px; line-height:1.45;">
             <div style="color:${setMeta.color}; font-weight:bold; font-size:13px; margin-bottom:4px;">${rarMeta.tag} ${slotMeta.name} [${setMeta.name}] — Ур. ${item.lvl}/7</div>
             <div>• ${STAT_LABELS[slotMeta.baseStat]}: <strong>+${bVal}</strong></div>
             <div>• ${STAT_LABELS[slotMeta.subStat]}: <strong>+${sVal}</strong></div>
-            <div>• Прочность: <strong style="color:${isBroken ? '#ff4500' : '#2ecc71'};">${dur}/100</strong> ${isBroken ? '(Сломано — бонусов нет!)' : ''}</div>
-            <div>• Чары Шамана: <strong style="color:#e58cff;">${enchLabel}</strong></div>
+            <div>• Прочность: <strong style="color:${isBroken ? '#ff4500' : '#2ecc71'};">${dur}/100</strong> ${isBroken ? '(Сломано!)' : ''}</div>
+            <div>• Чары: <strong style="color:#e58cff;">${enchLabel}</strong></div>
         </div>
         <div class="card-box" style="font-size:11px; line-height:1.4; border-color:${setMeta.color};">
             <strong style="color:${setMeta.color};">⚡ Умение стихии «${setMeta.name}»:</strong>
-            <div style="margin-top:3px; color:#e0e0e0;">${skillFullDesc}</div>
+            <div style="margin-top:3px; color:#e0e0e0;">${SET_SKILL_DESC[item.set] || ''}</div>
         </div>
         <div class="card-box" style="font-size:11px;">
-            <strong style="color:#e6c280;">💎 Самоцветы в вещах (${usedGems.length}/${maxSockets}):</strong>
-            <div style="margin-top:3px;">${socketsHTML}</div>
+            <strong style="color:#e6c280;">💎 Гнёзда самоцветов (нажмите на гнездо для вставки/замены):</strong>
+            ${socketsHTML}
         </div>
         <div style="display:flex; flex-direction:column; gap:6px;">
-            ${dur < 100 ? `<button class="menu-btn ${scrap >= repairCost ? 'green-btn' : 'disabled-btn'}" onclick="repairEquipSlot('${owner}','${slotKey}')">🔧 Починить до 100% (Нужно ${repairCost} 🔩 Лома)</button>` : ''}
-            ${(!isBroken && usedGems.length < maxSockets && gems.length > 0) ? `<button class="menu-btn green-btn" onclick="openGemSocketPicker('${owner}','${slotKey}')">💎 Вставить лучший камень из сумки</button>` : ''}
-            ${(!isBroken && enchRank < 5) ? `<button class="menu-btn ${dust >= enchCost ? 'purple-btn' : 'disabled-btn'}" onclick="enchantEquipItem('${owner}','${slotKey}')">✨ Наложить чары Шамана (${enchCost} ✨ Праха)</button>` : ''}
+            ${dur < 100 ? `<button class="menu-btn ${scrap >= repairCost ? 'green-btn' : 'disabled-btn'}" onclick="repairEquipSlot('${owner}','${slotKey}')">🔧 Починить до 100% (${repairCost} 🔩 Лома)</button>` : ''}
+            ${!isBroken ? `<button class="menu-btn ${scrap >= enchCost ? 'purple-btn' : 'disabled-btn'}" onclick="openEnchantSelectMenu('${owner}','${slotKey}')">✨ Наложить / Сменить чары Ур.${item.lvl} (${enchCost} 🔩 Лома)</button>` : ''}
         </div>
     `;
 }

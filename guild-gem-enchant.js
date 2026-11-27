@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ВЫБОР САМОЦВЕТОВ В ГНЁЗДА И ВЫБОР ЧАР +5% (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — ВЫБОР САМОЦВЕТОВ В ГНЁЗДА И ВЫБОР ЧАР +5% (v2.5.1-BETA)
    ========================================================================== */
 
 function openGemSelectMenu(owner, slotKey, socketIdx) {
@@ -12,14 +12,16 @@ function openGemSelectMenu(owner, slotKey, socketIdx) {
     document.getElementById('sub-view-title').innerText = "💎 ВЫБОР САМОЦВЕТА";
     document.getElementById('sub-view-subtitle').innerText = `Гнездо #${socketIdx + 1} (старый камень при замене исчезнет)`;
 
+    const shortRar = { 1: 'Обыч.', 2: 'Необыч.', 3: 'Редкий', 4: 'Эпич.', 5: 'Легенд.', 6: 'Мифич.' };
+
     const grid = gems.map((g, gIdx) => {
         const gm = GEMS_META[g.type] || GEMS_META.amber;
-        const rm = RARITY_TIERS[g.rank] || RARITY_TIERS[1];
+        const rm = RARITY_TIERS[g.rank] || RARITY_TIERS;
         return `
-            <div class="gem-tile rar-${rm.rank}" onclick="applyGemToSocket('${owner}','${slotKey}',${socketIdx},${gIdx})">
-                <span style="font-size:22px;">${gm.icon}</span>
-                <span style="font-size:9px; color:#fff; font-weight:bold;">+${rm.gemBonus}</span>
-                <span style="font-size:8px; color:#e0e0e0;">${STAT_LABELS[gm.stat].split(' ')[1]}</span>
+            <div class="gem-tile rar-${rm.rank}" onclick="applyGemToSocket('${owner}','${slotKey}',${socketIdx},${gIdx})" title="${rm.name} ${gm.name}">
+                <span style="font-size:20px; line-height:1;">${gm.icon}</span>
+                <span style="font-size:9px; color:#fff; font-weight:bold;">+${rm.gemBonus} ${STAT_LABELS[gm.stat].split(' ')}</span>
+                <span style="font-size:8px; color:#e6c280;">${shortRar[rm.rank] || rm.name}</span>
             </div>
         `;
     }).join('');

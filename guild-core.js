@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.7.0-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.9.6-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -90,10 +90,11 @@ function closeGuildView() {
     if (typeof stopHexHoldLoop === 'function') stopHexHoldLoop();
 
     const back = window.currentSubBackTarget || 'main';
+    if (back === 'bag' && typeof renderGuildBagView === 'function') { renderGuildBagView(); return; }
     if (back === 'lands' && typeof renderGuildLandsView === 'function') { renderGuildLandsView(); return; }
     if (back.startsWith('item:')) {
         const p = back.split(':');
-        if (typeof renderItemDetailView === 'function') { renderItemDetailView(p, p); return; }
+        if (typeof renderItemDetailView === 'function') { renderItemDetailView(p.at(1), p.at(2)); return; }
     }
     if (back === 'pet_cfg' && typeof renderOwnerGearConfig === 'function') { renderOwnerGearConfig('pet'); return; }
     if (back === 'ship_cfg' && typeof renderOwnerGearConfig === 'function') { renderOwnerGearConfig('ship'); return; }
@@ -122,7 +123,7 @@ function initGuildModule() {
     initGuildStorageDefaults();
     renderGuildHeaderStats();
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.7.0-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.9.6-BETA'}`;
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) backBtn.onclick = function() { window.location.href = MAIN_HUB_RETURN_URL + '?t=' + Date.now(); };
 }

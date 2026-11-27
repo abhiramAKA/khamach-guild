@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — 3 СТАТА (5/5/5), 3 КАМНЯ, 4 СЕТА И ЗЕЛЬЯ (v1.6.0-BETA)
+   ОРДЕН КХАМАЧА — 3 СТАТА, 4 РЕДКОСТИ, ИЗНОС И МЕТАЛЛОЛОМ (v1.9.0-BETA)
    ========================================================================== */
 
 const EQUIP_SLOTS = {
@@ -28,6 +28,13 @@ const EQUIP_SETS = {
     frost: { id: 'frost', name: 'Льда',    icon: '❄️', color: '#8cd1ff', skill: 'Барьер' }
 };
 
+const ITEM_RARITIES = {
+    1: { rank: 1, name: 'Базовая',     tag: '⬜', mult: 1.0 },
+    2: { rank: 2, name: 'Редкая',      tag: '🟦', mult: 1.4 },
+    3: { rank: 3, name: 'Эпическая',   tag: '🟪', mult: 1.9 },
+    4: { rank: 4, name: 'Легендарная', tag: '🟨', mult: 2.6 }
+};
+
 const GEM_RARITIES = {
     1: { rank: 1, name: 'Базовый',     tag: '⬜', bonus: 2 },
     2: { rank: 2, name: 'Редкий',      tag: '🟦', bonus: 4 },
@@ -41,11 +48,15 @@ const GEMS_META = {
     topaz:   { key: 'topaz',   name: 'Топаз',   icon: '🟡', stat: 'reg' }
 };
 
-const STAT_LABELS = {
-    atk: '⚔️ Атака',
-    hp:  '❤️ Жизнь',
-    reg: '💚 Реген'
-};
+const STAT_LABELS = { atk: '⚔️ Атака', hp: '❤️ Жизнь', reg: '💚 Реген' };
+
+function rollRandomRarityRank() {
+    const r = Math.random() * 100;
+    if (r < 55) return 1;
+    if (r < 83) return 2;
+    if (r < 96) return 3;
+    return 4;
+}
 
 function getEquipStorage(owner) {
     try { return JSON.parse(localStorage.getItem(`khamach_${owner}_equip`)) || {}; } catch (e) { return {}; }
@@ -74,6 +85,14 @@ function saveGemsList(arr) {
     localStorage.setItem('khamach_guild_gems_v3', JSON.stringify(arr));
 }
 
+function getScrapMetal() {
+    return parseInt(localStorage.getItem('khamach_scrap_metal') || '0');
+}
+
+function setScrapMetal(val) {
+    localStorage.setItem('khamach_scrap_metal', String(Math.max(0, val)));
+}
+
 function getHealPotions() {
     return parseInt(localStorage.getItem('khamach_heal_potions') || '0');
 }
@@ -83,8 +102,7 @@ function setHealPotions(val) {
 }
 
 function getGemBonusValue(type, rank) {
-    const rm = GEM_RARITIES[rank] || GEM_RARITIES[1];
-    return rm.bonus;
+    return (GEM_RARITIES[rank] || GEM_RARITIES).bonus;
 }
 
 function calculateOwnerStats(owner) {
@@ -96,7 +114,12 @@ function calculateOwnerStats(owner) {
         const item = equip[slotMeta.key];
         if (!item || item.lvl < 1) return;
 
-        const lvlMult = 1 + (item.lvl - 1) * 0.4;
+        // Если прочность вещи упала до 0 — бонусов и умений она не даёт
+        const dur = item.durability !== undefined ? item.durability : 100;
+        if (dur <= 0) return;
+
+        const rarMult = (ITEM_RARITIES[item.rarity || 1] || ITEM_RARITIES).mult;
+        const lvlMult = (1 + (item.lvl - 1) * 0.4) * rarMult;
         base[slotMeta.baseStat] += Math.round(slotMeta.baseVal * lvlMult);
         base[slotMeta.subStat] += Math.round(slotMeta.subVal * lvlMult);
 

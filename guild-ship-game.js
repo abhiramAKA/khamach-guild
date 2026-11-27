@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ КОРАБЛЯ С БЕСКОНЕЧНЫМ БОССОМ (v2.0.3-BETA)
+   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ КОРАБЛЯ С БЕСКОНЕЧНЫМ БОССОМ (v2.0.4-BETA)
    ========================================================================== */
 
 let shipLoopId = null;
@@ -11,9 +11,7 @@ window.stopShipMinigame = function() {
         cancelAnimationFrame(shipLoopId);
         shipLoopId = null;
     }
-    if (typeof clearShipControls === 'function') {
-        clearShipControls();
-    }
+    if (typeof clearShipControls === 'function') clearShipControls();
 };
 
 window.startShipMinigame = function() {
@@ -41,34 +39,32 @@ window.startShipMinigame = function() {
     const vampHeal = cfg.abyssCnt * 0.5;
     const critGain = cfg.stormCnt * 3;
     const critMult = 1.5 + cfg.stormCnt * 0.15;
-    const shieldCdFrames = cfg.frostCnt > 0 ? Math.max(5, 17 - cfg.frostCnt) * 60 : 0;
+    const shieldCd = cfg.frostCnt > 0 ? Math.max(5, 17 - cfg.frostCnt) * 60 : 0;
 
     const state = {
         px: 180, py: 205, hp: cfg.maxHP, moveDir: 0,
         bx: 180, by: 42, bDir: 1.6,
         damageDealt: 0, rageStage: 0,
-        critCharge: 0, shotCount: 0, shieldReady: cfg.frostCnt > 0, shieldTimer: 0,
+        critCharge: 0, shotCount: 0,
+        shieldReady: cfg.frostCnt > 0, shieldTimer: 0,
         pBullets: [], bBullets: [], frame: 0
     };
 
-    if (typeof bindShipInputs === 'function') {
-        bindShipInputs(canvas, state, cfg.maxHP);
-    }
+    if (typeof bindShipInputs === 'function') bindShipInputs(canvas, state, cfg.maxHP);
     window.shipGameRunning = true;
 
     function tick() {
         if (!window.shipGameRunning) return;
         state.frame++;
-
         state.rageStage = Math.floor(state.frame / 900);
         const bossDmg = 2 + state.rageStage;
-        const bossFireRate = Math.max(26, 52 - state.rageStage * 4);
+        const fireRate = Math.max(26, 52 - state.rageStage * 4);
 
         if (state.frame % 60 === 0) {
             if (burnDps > 0) state.damageDealt += burnDps;
             if (cfg.frostCnt > 0 && !state.shieldReady) {
                 state.shieldTimer += 60;
-                if (state.shieldTimer >= shieldCdFrames) {
+                if (state.shieldTimer >= shieldCd) {
                     state.shieldReady = true;
                     state.shieldTimer = 0;
                 }
@@ -84,17 +80,17 @@ window.startShipMinigame = function() {
         if (state.bx > 320 || state.bx < 40) state.bDir *= -1;
 
         if (state.frame % 18 === 0) {
-            const isCritShot = cfg.stormCnt > 0 && state.critCharge >= 100;
-            if (isCritShot) {
+            const isCrit = cfg.stormCnt > 0 && state.critCharge >= 100;
+            if (isCrit) {
                 state.critCharge = 0;
                 if (typeof playShipFX === 'function') playShipFX('crit');
             } else if (typeof playShipFX === 'function') {
                 playShipFX('shoot');
             }
-            state.pBullets.push({ x: state.px, y: state.py - 14, isCrit: isCritShot });
+            state.pBullets.push({ x: state.px, y: state.py - 14, isCrit: isCrit });
         }
 
-        if (state.frame % bossFireRate === 0) {
+        if (state.frame % fireRate === 0) {
             state.bBullets.push({ x: state.bx + (Math.random() * 48 - 24), y: state.by + 16 });
         }
 
@@ -112,12 +108,10 @@ window.startShipMinigame = function() {
             } else {
                 ctx.fillRect(b.x - 2, b.y, 4, 10);
             }
-
             if (Math.abs(b.x - state.bx) < 26 && Math.abs(b.y - state.by) < 20) {
                 state.shotCount++;
-                if (b.isCrit) {
-                    state.damageDealt += Math.round(cfg.totalAtk * critMult);
-                } else {
+                if (b.isCrit) state.damageDealt += Math.round(cfg.totalAtk * critMult);
+                else {
                     state.damageDealt += cfg.totalAtk;
                     if (critGain > 0) state.critCharge = Math.min(100, state.critCharge + critGain);
                 }
@@ -151,9 +145,7 @@ window.startShipMinigame = function() {
         if (state.hp <= 0) {
             window.stopShipMinigame();
             if (typeof playShipFX === 'function') playShipFX('win');
-            if (typeof grantEndlessBossRewards === 'function') {
-                grantEndlessBossRewards(state.damageDealt);
-            }
+            if (typeof grantEndlessBossRewards === 'function') grantEndlessBossRewards(state.damageDealt);
             return;
         }
         shipLoopId = requestAnimationFrame(tick);

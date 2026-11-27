@@ -1,6 +1,24 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И СЕТКА СНАРЯЖЕНИЯ (v2.4.1)
+   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ С КНОПКОЙ СПРАВКИ ❓ (v2.5.0-BETA)
    ========================================================================== */
+
+function showOwnerHelpModal(owner) {
+    if (owner === 'pet') {
+        alert(
+            "🌌 КОСМИЧЕСКОЕ ПУТЕШЕСТВИЕ ПИТОМЦА\n\n" +
+            "Ваш питомец отправляется в неизведанные сектора Астрала на 1 час, обыскивая обломки древних дредноутов и заброшенные станции.\n\n" +
+            "• Добыча: модули и обшивка для Корабля (от Обычных до Мифических), а также 🧪 Зелья исцеления.\n" +
+            "• Важно: пока питомец в походе, он не помогает Кораблю в бою с Боссом. Чем выше Боевая Мощь питомца, тем больше обломков он принесёт."
+        );
+    } else {
+        alert(
+            "🚀 ОХОТА НА АСТРАЛЬНОГО ЛЕВИАФАНА\n\n" +
+            "Вы выводите Астральный Корабль в открытый космос на битву с древним чудищем Бездны. Бой идёт на выживание: каждые 10 секунд Босс выпускает неотвратимую Астральную Волну.\n\n" +
+            "• Добыча: экипировка для Питомца и 💎 Самоцветы (🟠 Янтарь, ⚪ Жемчуг, ⚫ Обсидиан).\n" +
+            "• Правило тиров: чем больше урона вы успеете нанести до гибели корабля (500 / 1400 / 3000 / 5500 / 9000+), тем более редкие вещи и камни выпадут."
+        );
+    }
+}
 
 function renderOwnerHubView(owner) {
     const isPet = owner === 'pet';
@@ -18,7 +36,7 @@ function renderOwnerHubView(owner) {
     if (isPet) {
         const expStart = parseInt(localStorage.getItem('khamach_pet_exp_start') || '0');
         const dropCount = Math.max(1, Math.min(3, Math.floor(power / 55) + 1));
-        statusLine = `Добыча за поход: <strong>до ${dropCount} обломков + 🧪 Зелье</strong>`;
+        statusLine = `Добыча за поход: <strong>до ${dropCount} модулей + 🧪 Зелье</strong>`;
 
         if (expStart > 0) {
             const elapsed = Date.now() - expStart;
@@ -44,7 +62,8 @@ function renderOwnerHubView(owner) {
     }
 
     body.innerHTML = `
-        <div class="card-box" style="text-align:center; padding:14px 10px;">
+        <div class="card-box" style="text-align:center; padding:14px 10px; position:relative;">
+            <button class="mini-btn" onclick="showOwnerHelpModal('${owner}')" style="position:absolute; top:8px; right:8px; font-size:12px; padding:4px 8px;" title="Справка">❓</button>
             <div style="font-size:56px; line-height:1; margin-bottom:6px;">${isPet ? '🐲' : '🚀'}</div>
             <div style="font-size:15px; font-weight:bold; color:#ffd700; margin-bottom:4px;">Боевая Мощь: ⚡ ${power}</div>
             <div style="font-size:11px; color:#cdb38c; line-height:1.45; margin-bottom:12px;">${statusLine}</div>

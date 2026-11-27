@@ -1,21 +1,21 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ СО ШКАЛОЙ ОПЫТА И УРОВНЕМ (v2.8.0)
+   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ СО ШКАЛОЙ И ПИКОВЫМ БОНУСОМ (v2.8.1)
    ========================================================================== */
 
 function showOwnerHelpModal(owner) {
     if (owner === 'pet') {
         alert(
             "🌌 КОСМИЧЕСКОЕ ПУТЕШЕСТВИЕ ПИТОМЦА\n\n" +
-            "Ваш питомец отправляется в неизведанные сектора Астрала на 1 час, обыскивая обломки древних дредноутов и заброшенные станции.\n\n" +
-            "• Добыча: модули и обшивка для Корабля, а также 🧪 Зелья исцеления.\n" +
-            "• Уровень Питомца: повышается при кормлении 🍖 Астральным Кормом (добывается во Владениях). Уровень Питомца открывает скрещивание его одежды до того же уровня!"
+            "• Добыча из похода (1 час): модули для Корабля и 🧪 Зелья исцеления.\n" +
+            "• Уровень Питомца (1–7): повышается кормлением 🍖 Астральным Кормом (добывается во Владениях, макс. 10 шт. в сумке). Уровень Питомца открывает заточку его одежды.\n" +
+            "• Пик силы (Ур. 7 на 100%): даёт +20% ко всем статам Питомца, пока шкала сытости заполнена до упора!"
         );
     } else {
         alert(
             "🚀 ОХОТА НА АСТРАЛЬНОГО ЛЕВИАФАНА\n\n" +
-            "Вы выводите Астральный Корабль на битву с древним чудищем Бездны. Каждые 10 секунд Босс выпускает неотвратимую Астральную Волну.\n\n" +
-            "• Добыча: экипировка для Питомца и 💎 Самоцветы.\n" +
-            "• Уровень Корабля: повышается при изучении 📐 Чертежей Инженеров (добываются во Владениях). Уровень Корабля открывает улучшение его модулей!"
+            "• Добыча с Босса: экипировка Питомца и 💎 Самоцветы в зависимости от нанесённого урона.\n" +
+            "• Уровень Корабля (1–7): повышается изучением 📐 Чертежей Инженеров (добываются во Владениях, макс. 10 шт. в сумке).\n" +
+            "• Пик модернизации (Ур. 7 на 100%): даёт +20% ко всем статам Корабля, пока шкала обслужена до упора!"
         );
     }
 }
@@ -32,11 +32,12 @@ function renderOwnerHubView(owner) {
     const lvlInfo = getOwnerLevelInfo(owner);
     const tokens = getUpgradeTokens(owner);
 
-    const xpPct = lvlInfo.lvl >= 7 ? 100 : Math.min(100, Math.round((lvlInfo.xp / lvlInfo.req) * 100));
-    const xpText = lvlInfo.lvl >= 7 ? 'МАКС. УРОВЕНЬ (7)' : `Опыт: ${lvlInfo.xp} / ${lvlInfo.req}`;
+    const xpPct = Math.min(100, Math.round((lvlInfo.xp / lvlInfo.req) * 100));
+    const peakTag = lvlInfo.isPeak ? ' <span style="color:#2ecc71;">(🔥 ПИК +20%)</span>' : '';
+    const xpText = `Шкала: ${lvlInfo.xp} / ${lvlInfo.req}${peakTag}`;
     const feedBtnLabel = isPet
-        ? `🍖 Покормить питомца (+25 опыта | в сумке: ${tokens})`
-        : `📐 Изучить чертёж (+25 опыта | в сумке: ${tokens})`;
+        ? `🍖 Покормить питомца (+25 | в сумке: ${tokens}/${MAX_UPGRADE_TOKENS})`
+        : `📐 Изучить чертёж (+25 | в сумке: ${tokens}/${MAX_UPGRADE_TOKENS})`;
 
     let mainActionHTML = '';
     let statusLine = '';
@@ -69,7 +70,8 @@ function renderOwnerHubView(owner) {
         mainActionHTML = `<button class="menu-btn purple-btn" onclick="triggerShipFlightSafe()">🚀 В ПОЛЁТ НА БОССА</button>`;
     }
 
-    const feedButtonHTML = (lvlInfo.lvl < 7 && tokens > 0)
+    const canFeed = tokens > 0 && !lvlInfo.isPeak;
+    const feedButtonHTML = canFeed
         ? `<button class="menu-btn green-btn" style="font-size:11px; padding:7px;" onclick="consumeOwnerToken('${owner}','hub')">${feedBtnLabel}</button>`
         : '';
 
@@ -108,7 +110,7 @@ function renderOwnerGearConfig(owner) {
     setSubViewBack(owner, isPet ? '↩️ Назад к Питомцу' : '↩️ Назад к Кораблю');
     const lvlInfo = getOwnerLevelInfo(owner);
     document.getElementById('sub-view-title').innerText = isPet ? "⚙️ СНАРЯЖЕНИЕ ПИТОМЦА" : "⚙️ МОДУЛИ КОРАБЛЯ";
-    document.getElementById('sub-view-subtitle').innerText = `Макс. уровень вещей: Ур.${lvlInfo.lvl} (зависит от уровня владельца)`;
+    document.getElementById('sub-view-subtitle').innerText = `Макс. уровень вещей: Ур.${lvlInfo.lvl}${lvlInfo.isPeak ? ' | Пиковый бонус +20% активен' : ''}`;
 
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);

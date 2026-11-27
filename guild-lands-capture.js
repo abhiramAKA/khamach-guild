@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЗАХВАТ СЕКТОРА УДЕРЖАНИЕМ И ТРОФЕИ ВЛАДЕНИЙ (v2.9.1)
+   ОРДЕН КХАМАЧА — ЗАХВАТ СЕКТОРА УДЕРЖАНИЕМ И ТРОФЕИ 63 ГЕКСОВ (v2.9.2)
    ========================================================================== */
 
 function openHexCaptureView(hexIdx) {
@@ -69,7 +69,7 @@ function completeHexCapture(hexIdx) {
     if (isHexReachable(st.hexes, hexIdx) && st.energy >= reqEnergy) {
         setHexOwnedAt(st.hexes, hexIdx, true);
         st.energy -= reqEnergy;
-        if (hexIdx === 22) {
+        if (hexIdx === 10) {
             const maxEn = getMaxLandEnergy(st.hexes);
             st.energy = Math.min(maxEn, st.energy + 3);
             dropText += `\n⚡ Источник силы активирован: +3 ⚡ Энергии!`;
@@ -82,13 +82,13 @@ function completeHexCapture(hexIdx) {
     }
 
     if (st.hexes.every(Boolean)) {
-        const rewardScrap = 20 + st.level * 12;
+        const rewardScrap = 30 + st.level * 15;
         setScrapMetal(getScrapMetal() + rewardScrap);
         st.level += 1;
         st.hexes = new Array(HEX_TOTAL).fill(false);
         st.lastRaidTs = Date.now();
         saveGuildLandsState(st);
-        alert(`🎉 ВСЕ 37 СЕКТОРОВ УКРЕПЛЕНЫ!\nУровень владений повышен до Ур.${st.level}!\nНаграда: +${rewardScrap} 🔩 Лома${dropText}`);
+        alert(`🎉 ВСЕ 63 СЕКТОРА УКРЕПЛЕНЫ!\nУровень владений повышен до Ур.${st.level}!\nНаграда: +${rewardScrap} 🔩 Лома${dropText}`);
     } else {
         saveGuildLandsState(st);
         if (dropText) alert(`${isBoss ? '👹 Вожак повержен!' : `Сектор #${hexIdx + 1} освобождён!`}${dropText}`);

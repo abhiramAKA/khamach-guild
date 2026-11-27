@@ -9,14 +9,19 @@
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
         (function() {
-            window.GUILD_VERSION = "v1.0.0-ALPHA";
+            window.GUILD_VERSION = "v1.2.0-BETA";
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'guild-styles.css?v=' + window.GUILD_VERSION + '&t=' + buster;
             document.head.appendChild(link);
 
-            const scripts = ['guild-views.js', 'guild-core.js'];
+            const scripts = [
+                'guild-data.js',
+                'guild-core.js',
+                'guild-equip.js',
+                'guild-shaman-ship.js'
+            ];
             function loadSeq(idx) {
                 if (idx >= scripts.length) {
                     if (typeof initGuildModule === 'function') initGuildModule();
@@ -40,7 +45,7 @@
                 <h1>ОРДЕН КХАМАЧА</h1>
                 <span id="guild-lvl-badge" class="mini-btn gold-text">👑 1</span>
             </div>
-            <span class="subtitle">Внешний Предел Абхирамбурга</span>
+            <span class="subtitle">Астральный Предел Абхирамбурга</span>
 
             <div id="guild-resources-bar" class="res-bar"></div>
 
@@ -49,17 +54,17 @@
                     <span class="tile-icon">🌳</span>
                     <span class="tile-label">Древо Навыков</span>
                 </button>
-                <button class="tile-btn" onclick="openGuildView('alchemy')">
-                    <span class="tile-icon">🧪</span>
-                    <span class="tile-label">Алхимик</span>
+                <button class="tile-btn" onclick="openGuildView('shaman')">
+                    <span class="tile-icon">🔮</span>
+                    <span class="tile-label">Шаман</span>
                 </button>
-                <button class="tile-btn" onclick="openGuildView('smith')">
-                    <span class="tile-icon">⚒️</span>
-                    <span class="tile-label">Кузнец</span>
+                <button class="tile-btn" onclick="openGuildView('pet')">
+                    <span class="tile-icon">🐉</span>
+                    <span class="tile-label">Питомец</span>
                 </button>
-                <button class="tile-btn" onclick="openGuildView('minigame')">
-                    <span class="tile-icon">🎲</span>
-                    <span class="tile-label">Испытание</span>
+                <button class="tile-btn" onclick="openGuildView('ship')">
+                    <span class="tile-icon">🚀</span>
+                    <span class="tile-label">Корабль и Полёт</span>
                 </button>
             </div>
             <div id="guild-version-footer" class="version-footer"></div>

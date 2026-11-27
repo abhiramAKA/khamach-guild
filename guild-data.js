@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — 6 РЕДКОСТЕЙ, УРОВНИ И ШКАЛА ОПЫТА ПИТОМЦА/КОРАБЛЯ (v2.8.0)
+   ОРДЕН КХАМАЧА — 6 РЕДКОСТЕЙ, ПИКОВЫЙ БОНУС 7 УР. (+20%) И ЛИМИТ СУМКИ (v2.8.1)
    ========================================================================== */
 
 const EQUIP_SLOTS = {
@@ -45,32 +45,44 @@ const GEMS_META = {
 
 const STAT_LABELS = { atk: '⚔️ Атака', hp: '❤️ Жизнь', reg: '💚 Реген' };
 const OWNER_XP_TABLE = { 1: 100, 2: 200, 3: 350, 4: 550, 5: 800, 6: 1100 };
+const MAX_UPGRADE_TOKENS = 10;
 
 function getOwnerLevelInfo(owner) {
-    let data = { lvl: 1, xp: 0 };
+    const now = Date.now();
+    let data = { lvl: 1, xp: 0, lastFeedTs: now };
     try {
         const raw = JSON.parse(localStorage.getItem(`khamach_${owner}_lvl_xp`));
-        if (raw && raw.lvl >= 1) data = raw;
+        if (raw && raw.lvl >= 1) data = Object.assign(data, raw);
     } catch (e) {}
-    const req = data.lvl >= 7 ? 0 : (OWNER_XP_TABLE[data.lvl] || 1100);
-    return { lvl: Math.min(7, data.lvl), xp: data.xp, req: req };
+
+    const daysIdle = Math.floor((now - (data.lastFeedTs || now)) / 86400000);
+    if (daysIdle > 0 && data.xp > 0) {
+        data.xp = Math.max(0, data.xp - daysIdle * 15);
+        data.lastFeedTs += daysIdle * 86400000;
+        localStorage.setItem(`khamach_${owner}_lvl_xp`, JSON.stringify(data));
+    }
+
+    const lvl = Math.min(7, data.lvl);
+    const req = lvl >= 7 ? 1100 : (OWNER_XP_TABLE[lvl] || 1100);
+    const xp = lvl >= 7 ? Math.min(1100, data.xp) : data.xp;
+    const isPeak = (lvl === 7 && xp >= 1100);
+    return { lvl: lvl, xp: xp, req: req, isPeak: isPeak };
 }
 
 function addOwnerXp(owner, amount) {
     const info = getOwnerLevelInfo(owner);
-    if (info.lvl >= 7) return info;
     info.xp += amount;
-    while (info.lvl < 7) {
-        const need = OWNER_XP_TABLE[info.lvl] || 1100;
-        if (info.xp >= need) {
-            info.xp -= need;
-            info.lvl += 1;
-        } else {
-            break;
-        }
+    while (info.lvl < 7 && info.xp >= info.req) {
+        info.xp -= info.req;
+        info.lvl += 1;
+        info.req = info.lvl >= 7 ? 1100 : (OWNER_XP_TABLE[info.lvl] || 1100);
     }
-    if (info.lvl >= 7) info.xp = 0;
-    localStorage.setItem(`khamach_${owner}_lvl_xp`, JSON.stringify({ lvl: info.lvl, xp: info.xp }));
+    if (info.lvl >= 7) {
+        info.xp = Math.min(1100, info.xp);
+    }
+    localStorage.setItem(`khamach_${owner}_lvl_xp`, JSON.stringify({
+        lvl: info.lvl, xp: info.xp, lastFeedTs: Date.now()
+    }));
     return getOwnerLevelInfo(owner);
 }
 
@@ -81,7 +93,7 @@ function getUpgradeTokens(owner) {
 
 function setUpgradeTokens(owner, val) {
     const key = owner === 'pet' ? 'khamach_pet_food_cnt' : 'khamach_ship_bp_cnt';
-    localStorage.setItem(key, String(Math.max(0, val)));
+    localStorage.setItem(key, String(Math.max(0, Math.min(MAX_UPGRADE_TOKENS, val))));
 }
 
 function rollPetTripRarity() {
@@ -97,30 +109,18 @@ function rollPetTripRarity() {
 function getEquipStorage(owner) {
     try { return JSON.parse(localStorage.getItem(`khamach_${owner}_equip`)) || {}; } catch (e) { return {}; }
 }
-
-function saveEquipStorage(owner, data) {
-    localStorage.setItem(`khamach_${owner}_equip`, JSON.stringify(data));
-}
-
+function saveEquipStorage(owner, data) { localStorage.setItem(`khamach_${owner}_equip`, JSON.stringify(data)); }
 function getBagItems() {
     try { return JSON.parse(localStorage.getItem('khamach_guild_bag')) || []; } catch (e) { return []; }
 }
-
-function saveBagItems(arr) {
-    localStorage.setItem('khamach_guild_bag', JSON.stringify(arr));
-}
-
+function saveBagItems(arr) { localStorage.setItem('khamach_guild_bag', JSON.stringify(arr)); }
 function getGemsList() {
     try {
         const raw = JSON.parse(localStorage.getItem('khamach_guild_gems_v4'));
         return Array.isArray(raw) ? raw : [];
     } catch (e) { return []; }
 }
-
-function saveGemsList(arr) {
-    localStorage.setItem('khamach_guild_gems_v4', JSON.stringify(arr));
-}
-
+function saveGemsList(arr) { localStorage.setItem('khamach_guild_gems_v4', JSON.stringify(arr)); }
 function getScrapMetal() { return parseInt(localStorage.getItem('khamach_scrap_metal') || '0'); }
 function setScrapMetal(val) { localStorage.setItem('khamach_scrap_metal', String(Math.max(0, val))); }
 function getHealPotions() { return parseInt(localStorage.getItem('khamach_heal_potions') || '0'); }
@@ -128,6 +128,7 @@ function setHealPotions(val) { localStorage.setItem('khamach_heal_potions', Stri
 function getGemBonusValue(rank) { return (RARITY_TIERS[rank] || RARITY_TIERS).gemBonus; }
 
 function calculateOwnerStats(owner) {
+    const lvlInfo = getOwnerLevelInfo(owner);
     const base = { atk: 5, hp: 5, reg: 5 };
     const equip = getEquipStorage(owner);
     const setCounts = { flame: 0, abyss: 0, storm: 0, frost: 0 };
@@ -156,6 +157,13 @@ function calculateOwnerStats(owner) {
             base[item.enchant.stat] = Math.round(base[item.enchant.stat] * (1 + effRank * 0.05));
         }
     });
+
+    if (lvlInfo.isPeak) {
+        base.atk = Math.round(base.atk * 1.2);
+        base.hp  = Math.round(base.hp * 1.2);
+        base.reg = Math.round(base.reg * 1.2);
+    }
+
     return { atk: base.atk, hp: base.hp, reg: base.reg, setCounts: setCounts };
 }
 

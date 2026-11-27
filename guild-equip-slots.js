@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ПЛИТКИ ОДЕЖДЫ, ГНЁЗДА КАМНЕЙ И ВЫБОР ЧАР (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — ПЛИТКИ ОДЕЖДЫ, ГНЁЗДА КАМНЕЙ И ПЛОСКИЕ ЧАРЫ (v2.10.0)
    ========================================================================== */
 
 const SET_SKILL_DESC = {
@@ -43,7 +43,7 @@ function renderItemDetailView(owner, slotKey) {
     if (!item || !slotMeta) return;
 
     const setMeta = EQUIP_SETS[item.set] || EQUIP_SETS.flame;
-    const rarMeta = RARITY_TIERS[item.rarity || 1] || RARITY_TIERS[1];
+    const rarMeta = RARITY_TIERS[item.rarity || 1] || RARITY_TIERS;
     const dur = item.durability !== undefined ? item.durability : 100;
     const isBroken = dur <= 0;
 
@@ -55,12 +55,12 @@ function renderItemDetailView(owner, slotKey) {
     const usedGems = item.gems || [];
     let socketsHTML = maxSockets === 0 ? '<div style="color:#6a5335;">Гнёзда откроются со 2-го уровня вещи.</div>' : '<div class="gem-grid" style="margin-top:5px;">';
     for (let i = 0; i < maxSockets; i++) {
-        const gObj = usedGems[i];
+        const gObj = usedGems.at(i);
         const clickAttr = !isBroken ? `onclick="openGemSelectMenu('${owner}','${slotKey}',${i})"` : '';
         if (gObj) {
             const gm = GEMS_META[gObj.type];
-            const rm = RARITY_TIERS[gObj.rank] || RARITY_TIERS[1];
-            socketsHTML += `<div class="gem-tile rar-${rm.rank}" ${clickAttr} title="Нажмите для замены"><span style="font-size:20px;">${gm.icon}</span><span style="font-size:9px; color:#fff;">+${rm.gemBonus}</span></div>`;
+            const rm = RARITY_TIERS[gObj.rank] || RARITY_TIERS;
+            socketsHTML += `<div class="gem-tile rar-${rm.rank}" ${clickAttr} title="${rm.name} ${gm.name} (+${rm.gemBonus}) — Нажмите для замены"><span style="font-size:20px;">${gm.icon}</span><span style="font-size:9px; color:#fff;">+${rm.gemBonus}</span></div>`;
         } else {
             socketsHTML += `<div class="gem-tile empty" style="opacity:0.85; cursor:pointer;" ${clickAttr}><span style="font-size:16px;">➕</span><span style="font-size:9px;">Гнездо</span></div>`;
         }
@@ -70,7 +70,7 @@ function renderItemDetailView(owner, slotKey) {
     const scrap = getScrapMetal();
     const repairCost = Math.max(2, Math.ceil((100 - dur) / 10) * 2);
     const effEnchRank = item.enchant ? Math.min(item.lvl, item.enchant.rank) : 0;
-    const enchLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${effEnchRank * 5}% | Ур.${effEnchRank})` : 'Нет чар';
+    const enchLabel = item.enchant ? `${STAT_LABELS[item.enchant.stat]} (+${effEnchRank * 5} | Ур.${effEnchRank})` : 'Нет чар';
     const enchCost = item.lvl * 10;
 
     document.getElementById('sub-view-title').innerText = `${slotMeta.icon} ${slotMeta.name}`;
@@ -78,7 +78,8 @@ function renderItemDetailView(owner, slotKey) {
 
     document.getElementById('sub-view-body').innerHTML = `
         <div class="card-box" style="font-size:12px; line-height:1.45;">
-            <div style="color:${setMeta.color}; font-weight:bold; font-size:13px; margin-bottom:4px;">${rarMeta.tag} ${slotMeta.name} [${setMeta.name}] — Ур. ${item.lvl}/7</div>
+            <div style="color:${setMeta.color}; font-weight:bold; font-size:13px; margin-bottom:4px;">${slotMeta.name} [${setMeta.name}] — Ур. ${item.lvl}/7</div>
+            <div>• Редкость: <strong>${rarMeta.tag} ${rarMeta.name}</strong> (множитель ×${rarMeta.mult})</div>
             <div>• ${STAT_LABELS[slotMeta.baseStat]}: <strong>+${bVal}</strong></div>
             <div>• ${STAT_LABELS[slotMeta.subStat]}: <strong>+${sVal}</strong></div>
             <div>• Прочность: <strong style="color:${isBroken ? '#ff4500' : '#2ecc71'};">${dur}/100</strong> ${isBroken ? '(Сломано!)' : ''}</div>

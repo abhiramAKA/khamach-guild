@@ -1,40 +1,6 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЕМОНТ ЗА ЛОМ, СЛИЯНИЕ ПО РЕДКОСТИ И ПОХОД (v1.9.0-BETA)
+   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ РЮКЗАКА, РЕМОНТА, ЧАР И ПОХОДА (v2.0.0-BETA)
    ========================================================================== */
-
-function buildOwnerBagHTML(owner, bag, equip) {
-    if (bag.length === 0) return `<div style="font-size:11px; color:#6a5335;">В рюкзаке нет новых предметов.</div>`;
-    return bag.map((bItem, idx) => {
-        const sMeta = EQUIP_SLOTS[owner].find(s => s.key === bItem.slotKey);
-        const setMeta = EQUIP_SETS[bItem.set] || EQUIP_SETS.flame;
-        const bRar = ITEM_RARITIES[bItem.rarity || 1] || ITEM_RARITIES;
-        const equipped = equip[bItem.slotKey];
-        const eqRarRank = equipped ? (equipped.rarity || 1) : 0;
-
-        let btns = '';
-        if (!equipped) {
-            btns += `<button class="mini-btn green-btn" onclick="equipFromBag('${owner}', ${idx})">Надеть</button>`;
-        } else {
-            // Скрещивание только при одинаковой редкости (Базовая+Базовая, Легендарная+Легендарная)
-            if (eqRarRank === bRar.rank && equipped.lvl < 7) {
-                btns += `<button class="mini-btn green-btn" onclick="mergeFromBag('${owner}', ${idx})">+1 Ур.</button>`;
-            }
-            const repLabel = bRar.rank > eqRarRank ? `Надеть ${bRar.tag}` : 'Заменить';
-            btns += `<button class="mini-btn" onclick="equipFromBag('${owner}', ${idx})">${repLabel}</button>`;
-        }
-
-        const scrapYield = 5 * bRar.rank;
-        return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px dashed #2e251d; font-size:11px; gap:4px;">
-                <span style="color:${setMeta.color};">${bRar.tag} ${sMeta.icon} ${sMeta.name} [${setMeta.name}]</span>
-                <div style="display:flex; gap:3px; flex-shrink:0;">
-                    ${btns}
-                    <button class="mini-btn back-tint" onclick="salvageFromBag('${owner}', ${idx})" title="Разобрать на Лом и Прах">🔩+${scrapYield}</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
 
 function rollRandomGemDrop() {
     const gKeys = Object.keys(GEMS_META);
@@ -42,13 +8,61 @@ function rollRandomGemDrop() {
     return { type: type, rank: rollRandomRarityRank() };
 }
 
-function findRealBagIndex(owner, ownerIdx) {
+function bagEquipByRealIdx(realIdx) {
     const allBag = getBagItems();
-    let count = -1;
-    for (let i = 0; i < allBag.length; i++) {
-        if (allBag[i].owner === owner) { count++; if (count === ownerIdx) return i; }
-    }
-    return -1;
+    const picked = allBag[realIdx];
+    if (!picked) return;
+
+    const owner = picked.owner;
+    const equip = getEquipStorage(owner);
+    const oldItem = equip[picked.slotKey];
+
+    equip[picked.slotKey] = {
+        lvl: oldItem ? oldItem.lvl : 1,
+        set: picked.set,
+        rarity: picked.rarity || 1,
+        durability: 100,
+        gems: oldItem ? (oldItem.gems || []) : [],
+        enchant: oldItem ? oldItem.enchant : null
+    };
+    saveEquipStorage(owner, equip);
+    allBag.splice(realIdx, 1);
+    saveBagItems(allBag);
+    renderGuildBagView();
+}
+
+function bagMergeByRealIdx(realIdx) {
+    const allBag = getBagItems();
+    const picked = allBag[realIdx];
+    if (!picked) return;
+
+    const owner = picked.owner;
+    const equip = getEquipStorage(owner);
+    const target = equip[picked.slotKey];
+    if (!target || target.lvl >= 7) return;
+    if ((target.rarity || 1) !== (picked.rarity || 1)) return;
+
+    target.lvl += 1;
+    saveEquipStorage(owner, equip);
+    allBag.splice(realIdx, 1);
+    saveBagItems(allBag);
+    alert(`Предмет улучшен до ${target.lvl} уровня! Открыто новое гнездо для камня.`);
+    renderGuildBagView();
+}
+
+function bagSalvageByRealIdx(realIdx) {
+    const allBag = getBagItems();
+    const picked = allBag[realIdx];
+    if (!picked) return;
+
+    const rarRank = picked.rarity || 1;
+    allBag.splice(realIdx, 1);
+    saveBagItems(allBag);
+
+    setScrapMetal(getScrapMetal() + 5 * rarRank);
+    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
+    localStorage.setItem('khamach_astral_dust', String(dust + 5 * rarRank));
+    renderGuildBagView();
 }
 
 function repairEquipSlot(owner, slotKey) {
@@ -66,67 +80,7 @@ function repairEquipSlot(owner, slotKey) {
     setScrapMetal(scrap - cost);
     item.durability = 100;
     saveEquipStorage(owner, equip);
-    renderGuildHeaderStats();
-    renderOwnerEquipView(owner);
-}
-
-function equipFromBag(owner, ownerIdx) {
-    const allBag = getBagItems();
-    const realIdx = findRealBagIndex(owner, ownerIdx);
-    if (realIdx === -1) return;
-
-    const picked = allBag[realIdx];
-    const equip = getEquipStorage(owner);
-    const oldItem = equip[picked.slotKey];
-
-    equip[picked.slotKey] = {
-        lvl: oldItem ? oldItem.lvl : 1,
-        set: picked.set,
-        rarity: picked.rarity || 1,
-        durability: 100,
-        gems: oldItem ? (oldItem.gems || []) : [],
-        enchant: oldItem ? oldItem.enchant : null
-    };
-    saveEquipStorage(owner, equip);
-    allBag.splice(realIdx, 1);
-    saveBagItems(allBag);
-    renderOwnerEquipView(owner);
-}
-
-function mergeFromBag(owner, ownerIdx) {
-    const allBag = getBagItems();
-    const realIdx = findRealBagIndex(owner, ownerIdx);
-    if (realIdx === -1) return;
-
-    const picked = allBag[realIdx];
-    const equip = getEquipStorage(owner);
-    const target = equip[picked.slotKey];
-    if (!target || target.lvl >= 7) return;
-    if ((target.rarity || 1) !== (picked.rarity || 1)) return;
-
-    target.lvl += 1;
-    saveEquipStorage(owner, equip);
-    allBag.splice(realIdx, 1);
-    saveBagItems(allBag);
-    alert(`Предмет улучшен до ${target.lvl} уровня! Открыто новое гнездо для камня.`);
-    renderOwnerEquipView(owner);
-}
-
-function salvageFromBag(owner, ownerIdx) {
-    const allBag = getBagItems();
-    const realIdx = findRealBagIndex(owner, ownerIdx);
-    if (realIdx === -1) return;
-
-    const rarRank = allBag[realIdx].rarity || 1;
-    allBag.splice(realIdx, 1);
-    saveBagItems(allBag);
-
-    setScrapMetal(getScrapMetal() + 5 * rarRank);
-    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
-    localStorage.setItem('khamach_astral_dust', String(dust + 5 * rarRank));
-
-    renderGuildHeaderStats();
-    renderOwnerEquipView(owner);
+    renderOwnerGearConfig(owner);
 }
 
 function openGemSocketPicker(owner, slotKey) {
@@ -148,15 +102,33 @@ function openGemSocketPicker(owner, slotKey) {
     const rm = GEM_RARITIES[chosenGem.rank] || GEM_RARITIES;
     const gm = GEMS_META[chosenGem.type];
     alert(`Вставлен камень: ${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(chosenGem.type, chosenGem.rank)} ${STAT_LABELS[gm.stat]})`);
+    renderOwnerGearConfig(owner);
+}
 
-    renderGuildHeaderStats();
-    renderOwnerEquipView(owner);
+function enchantEquipItem(owner, slotKey) {
+    const equip = getEquipStorage(owner);
+    const item = equip[slotKey];
+    if (!item) return;
+
+    const rank = item.enchant ? item.enchant.rank : 0;
+    const cost = (rank + 1) * 10;
+    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
+    if (rank >= 5 || dust < cost) return;
+
+    const statsKeys = ['atk', 'hp', 'reg'];
+    const chosenStat = statsKeys[Math.floor(Math.random() * statsKeys.length)];
+
+    localStorage.setItem('khamach_astral_dust', String(dust - cost));
+    item.enchant = { stat: chosenStat, rank: rank + 1 };
+    saveEquipStorage(owner, equip);
+    alert(`Наложены чары: ${STAT_LABELS[chosenStat]} (+${(rank + 1) * 15}%)!`);
+    renderOwnerGearConfig(owner);
 }
 
 function startPetSpaceTrip() {
     if (isPetOnExpedition()) return;
     localStorage.setItem('khamach_pet_exp_start', Date.now().toString());
-    renderOwnerEquipView('pet');
+    renderOwnerHubView('pet');
 }
 
 function startPetExpTicker() {
@@ -166,11 +138,11 @@ function startPetExpTicker() {
         const st = parseInt(localStorage.getItem('khamach_pet_exp_start') || '0');
         if (!el || !st) return;
         const rem = Math.max(0, PET_EXPEDITION_MS - (Date.now() - st));
-        if (rem <= 0) { clearInterval(activeGuildTimer); renderOwnerEquipView('pet'); }
+        if (rem <= 0) { clearInterval(activeGuildTimer); renderOwnerHubView('pet'); }
         else {
             const m = Math.floor(rem / 60000).toString().padStart(2, '0');
             const s = Math.floor((rem % 60000) / 1000).toString().padStart(2, '0');
-            el.innerText = `⏱️ В походе: ${m}:${s} (В бою с Боссом не помогает)`;
+            el.innerText = `⏱️ В походе: ${m}:${s}`;
         }
     }, 1000);
 }
@@ -192,7 +164,7 @@ function claimPetSpaceLoot() {
         const rar = rollRandomRarityRank();
         const rMeta = ITEM_RARITIES[rar];
         bag.push({ owner: 'ship', slotKey: s.key, set: stKey, rarity: rar });
-        report.push(`${rMeta.tag} ${s.icon} ${s.name} [${EQUIP_SETS[stKey].name}] (${rMeta.name})`);
+        report.push(`${rMeta.tag} ${s.icon} ${s.name} [${EQUIP_SETS[stKey].name}]`);
     }
     saveBagItems(bag);
 
@@ -211,7 +183,6 @@ function claimPetSpaceLoot() {
     }
 
     localStorage.removeItem('khamach_pet_exp_start');
-    renderGuildHeaderStats();
     alert(`Питомец вернулся из космоса!\nНайдена добыча:\n• ${report.join('\n• ')}`);
-    renderOwnerEquipView('pet');
+    renderOwnerHubView('pet');
 }

@@ -1,37 +1,17 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — АРКАДНЫЙ БОЙ С 4 УМЕНИЯМИ И ЗЕЛЬЕМ ЛЕЧЕНИЯ (v1.6.0)
+   ОРДЕН КХАМАЧА — БЕСКОНЕЧНЫЙ БОСС И ШКАЛА ПОРОГОВ НАГРАДЫ (v2.0.1-BETA)
    ========================================================================== */
 
 let shipLoopId = null;
-let shipGameRunning = false;
+window.shipGameRunning = false;
 
 window.stopShipMinigame = function() {
-    shipGameRunning = false;
+    window.shipGameRunning = false;
     if (shipLoopId) { cancelAnimationFrame(shipLoopId); shipLoopId = null; }
+    if (typeof clearShipControls === 'function') clearShipControls();
 };
 
-window.launchShipRaidView = function() {
-    const titleEl = document.getElementById('sub-view-title');
-    const subEl = document.getElementById('sub-view-subtitle');
-    const bodyEl = document.getElementById('sub-view-body');
-    if (!bodyEl) return;
-
-    if (titleEl) titleEl.innerText = "🚀 ПОЛЁТ НА БОССА";
-    if (subEl) subEl.innerText = "Уворачивайтесь от огня и бейте Босса";
-
-    const potions = getHealPotions();
-    bodyEl.innerHTML = `
-        <canvas id="ship-battle-canvas" class="ship-canvas" width="360" height="240"></canvas>
-        <div class="ship-controls">
-            <button id="ship-left-btn" class="menu-btn">⬅️ ВЛЕВО</button>
-            <button id="ship-potion-btn" class="menu-btn green-btn" style="width:95px; padding:8px 4px; font-size:12px;">🧪 (${potions})</button>
-            <button id="ship-right-btn" class="menu-btn">ВПРАВО ➡️</button>
-        </div>
-    `;
-    startShipMinigame();
-};
-
-function startShipMinigame() {
+window.startShipMinigame = function() {
     window.stopShipMinigame();
     const canvas = document.getElementById('ship-battle-canvas');
     if (!canvas) return;
@@ -57,56 +37,28 @@ function startShipMinigame() {
     const critMult = 1.5 + stormCnt * 0.15;
     const shieldCdFrames = frostCnt > 0 ? Math.max(5, 17 - frostCnt) * 60 : 0;
 
-    const shipPower = getOwnerPowerScore(sStats);
-    const bossMaxHP = 110 + shipPower * 5;
-    const bossDmg = 2 + Math.floor(shipPower / 25);
-
     const state = {
         px: 180, py: 205, hp: maxHP, moveDir: 0,
-        bx: 180, by: 40, bDir: 1.5, bossHP: bossMaxHP,
+        bx: 180, by: 42, bDir: 1.6,
+        damageDealt: 0, rageStage: 0,
         critCharge: 0, shotCount: 0, shieldReady: frostCnt > 0, shieldTimer: 0,
         pBullets: [], bBullets: [], frame: 0
     };
 
-    const lBtn = document.getElementById('ship-left-btn');
-    const rBtn = document.getElementById('ship-right-btn');
-    const potBtn = document.getElementById('ship-potion-btn');
-
-    if (lBtn) {
-        lBtn.onmousedown = lBtn.ontouchstart = (e) => { e.preventDefault(); state.moveDir = -1; };
-        lBtn.onmouseup = lBtn.ontouchend = () => { if (state.moveDir === -1) state.moveDir = 0; };
-    }
-    if (rBtn) {
-        rBtn.onmousedown = rBtn.ontouchstart = (e) => { e.preventDefault(); state.moveDir = 1; };
-        rBtn.onmouseup = rBtn.ontouchend = () => { if (state.moveDir === 1) state.moveDir = 0; };
-    }
-    if (potBtn) {
-        potBtn.onclick = function() {
-            const curPots = getHealPotions();
-            if (curPots <= 0 || state.hp >= maxHP) return;
-            setHealPotions(curPots - 1);
-            const healAmount = Math.max(4, Math.ceil(maxHP * 0.5));
-            state.hp = Math.min(maxHP, Number((state.hp + healAmount).toFixed(1)));
-            potBtn.innerText = `🧪 (${curPots - 1})`;
-        };
-    }
-
-    canvas.ontouchmove = (e) => {
-        if (!e.touches || !e.touches.length) return;
-        const rect = canvas.getBoundingClientRect();
-        const tx = (e.touches.item(0).clientX - rect.left) * (canvas.width / rect.width);
-        state.px = Math.max(22, Math.min(338, tx));
-    };
-
-    shipGameRunning = true;
+    if (typeof bindShipInputs === 'function') bindShipInputs(canvas, state, maxHP);
+    window.shipGameRunning = true;
 
     function tick() {
-        if (!shipGameRunning) return;
+        if (!window.shipGameRunning) return;
         state.frame++;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        state.rageStage = Math.floor(state.frame / 900);
+        const bossDmg = 2 + state.rageStage;
+        const bossFireRate = Math.max(26, 52 - state.rageStage * 4);
+
         if (state.frame % 60 === 0) {
-            if (burnDps > 0) state.bossHP -= burnDps;
+            if (burnDps > 0) state.damageDealt += burnDps;
             if (frostCnt > 0 && !state.shieldReady) {
                 state.shieldTimer += 60;
                 if (state.shieldTimer >= shieldCdFrames) { state.shieldReady = true; state.shieldTimer = 0; }
@@ -123,12 +75,17 @@ function startShipMinigame() {
 
         if (state.frame % 18 === 0) {
             const isCritShot = stormCnt > 0 && state.critCharge >= 100;
-            if (isCritShot) state.critCharge = 0;
+            if (isCritShot) {
+                state.critCharge = 0;
+                if (typeof playShipFX === 'function') playShipFX('crit');
+            } else {
+                if (typeof playShipFX === 'function') playShipFX('shoot');
+            }
             state.pBullets.push({ x: state.px, y: state.py - 14, isCrit: isCritShot });
         }
 
-        if (state.frame % 55 === 0) {
-            state.bBullets.push({ x: state.bx + (Math.random() * 36 - 18), y: state.by + 16 });
+        if (state.frame % bossFireRate === 0) {
+            state.bBullets.push({ x: state.bx + (Math.random() * 48 - 24), y: state.by + 16 });
         }
 
         state.pBullets = state.pBullets.filter(b => {
@@ -139,9 +96,10 @@ function startShipMinigame() {
 
             if (Math.abs(b.x - state.bx) < 26 && Math.abs(b.y - state.by) < 20) {
                 state.shotCount++;
-                if (b.isCrit) { state.bossHP -= Math.round(totalAtk * critMult); }
-                else {
-                    state.bossHP -= totalAtk;
+                if (b.isCrit) {
+                    state.damageDealt += Math.round(totalAtk * critMult);
+                } else {
+                    state.damageDealt += totalAtk;
                     if (critGain > 0) state.critCharge = Math.min(100, state.critCharge + critGain);
                 }
                 if (vampHeal > 0 && state.shotCount % 4 === 0) {
@@ -154,18 +112,23 @@ function startShipMinigame() {
 
         ctx.fillStyle = "#ff4500";
         state.bBullets = state.bBullets.filter(b => {
-            b.y += 3.1;
+            b.y += 3.1 + Math.min(1.5, state.rageStage * 0.25);
             ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI * 2); ctx.fill();
             if (Math.abs(b.x - state.px) < 16 && Math.abs(b.y - state.py) < 14) {
-                if (state.shieldReady) { state.shieldReady = false; }
-                else { state.hp = Number((state.hp - bossDmg).toFixed(1)); }
+                if (state.shieldReady) {
+                    state.shieldReady = false;
+                    if (typeof playShipFX === 'function') playShipFX('shield');
+                } else {
+                    state.hp = Number((state.hp - bossDmg).toFixed(1));
+                    if (typeof playShipFX === 'function') playShipFX('hit');
+                }
                 return false;
             }
             return b.y < canvas.height;
         });
 
         ctx.font = "32px serif"; ctx.textAlign = "center";
-        ctx.fillText("👾", state.bx, state.by + 10);
+        ctx.fillText("👾", state.bx, state.by + 12);
         ctx.font = "26px serif";
         ctx.fillText("🚀", state.px, state.py + 8);
 
@@ -174,8 +137,17 @@ function startShipMinigame() {
             ctx.beginPath(); ctx.arc(state.px, state.py, 20, 0, Math.PI * 2); ctx.stroke();
         }
 
-        ctx.fillStyle = "#331111"; ctx.fillRect(20, 8, 320, 8);
-        ctx.fillStyle = "#ff3333"; ctx.fillRect(20, 8, 320 * Math.max(0, state.bossHP / bossMaxHP), 8);
+        const curDmg = Math.floor(state.damageDealt);
+        const tierInfo = typeof getShipLootTierByDamage === 'function'
+            ? getShipLootTierByDamage(curDmg)
+            : { label: '🎁 40%', nextGoal: 500 };
+        const goalStr = tierInfo.nextGoal > 0 ? `→ ${tierInfo.nextGoal}` : 'МАКС!';
+
+        ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(8, 4, 344, 16);
+        ctx.fillStyle = "#ffd700"; ctx.font = "10px Georgia"; ctx.textAlign = "left";
+        ctx.fillText(`💥 ${curDmg} (${tierInfo.label} ${goalStr})`, 12, 16);
+        ctx.fillStyle = "#ff8c8c"; ctx.textAlign = "right";
+        ctx.fillText(`Ярость:${state.rageStage + 1}`, 346, 16);
 
         if (stormCnt > 0) {
             ctx.fillStyle = "#221133"; ctx.fillRect(10, 220, 340, 4);
@@ -185,40 +157,13 @@ function startShipMinigame() {
         ctx.fillStyle = "#2ecc71"; ctx.font = "11px Georgia"; ctx.textAlign = "left";
         ctx.fillText(`❤️${state.hp}/${maxHP} | ⚔️${totalAtk} 💚${totalReg} ${state.shieldReady ? '❄️Щит' : ''}`, 10, 236);
 
-        if (state.bossHP <= 0) { window.stopShipMinigame(); grantBossPetLoot(); return; }
         if (state.hp <= 0) {
             window.stopShipMinigame();
-            alert("Корабль подбит! Используйте 🧪 Зелья в бою или усильте экипировку.");
-            renderOwnerEquipView('ship');
+            if (typeof playShipFX === 'function') playShipFX('win');
+            if (typeof grantEndlessBossRewards === 'function') grantEndlessBossRewards(state.damageDealt);
             return;
         }
         shipLoopId = requestAnimationFrame(tick);
     }
     shipLoopId = requestAnimationFrame(tick);
-}
-
-function grantBossPetLoot() {
-    const sets = ['flame', 'abyss', 'storm', 'frost'];
-    const pSlots = EQUIP_SLOTS.pet;
-    const s = pSlots[Math.floor(Math.random() * pSlots.length)];
-    const stKey = sets[Math.floor(Math.random() * sets.length)];
-
-    const bag = getBagItems();
-    bag.push({ owner: 'pet', slotKey: s.key, set: stKey });
-    saveBagItems(bag);
-
-    let gemText = '';
-    if (Math.random() < 0.50 && typeof rollRandomGemDrop === 'function') {
-        const gems = getGemsList();
-        const droppedGem = rollRandomGemDrop();
-        gems.push(droppedGem);
-        saveGemsList(gems);
-        const rm = GEM_RARITIES[droppedGem.rank];
-        const gm = GEMS_META[droppedGem.type];
-        gemText = `\n+ ${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(droppedGem.type, droppedGem.rank)})`;
-    }
-
-    renderGuildHeaderStats();
-    alert(`ПОБЕДА НАД БОССОМ!\nВыпала экипировка для Питомца:\n${s.icon} ${s.name} [${EQUIP_SETS[stKey].name}] Ур.1${gemText}`);
-    renderOwnerEquipView('ship');
-}
+};

@@ -1,16 +1,35 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЮКЗАК: ЦВЕТНЫЕ ПЛИТКИ КАМНЕЙ И СНАРЯЖЕНИЯ (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — РЮКЗАК: КОРМ, ЧЕРТЕЖИ, КАМНИ И ОГРАНИЧЕНИЕ ЗАТОЧКИ (v2.8.0)
    ========================================================================== */
 
 function renderGuildBagView() {
     setSubViewBack('main', 'Назад в Орден');
     document.getElementById('sub-view-title').innerText = "🎒 РЮКЗАК ОРДЕНА";
-    document.getElementById('sub-view-subtitle').innerText = "Самоцветы, Модули и Экипировка";
+    document.getElementById('sub-view-subtitle').innerText = "Корм, Чертежи, Самоцветы и Вещи";
 
     const body = document.getElementById('sub-view-body');
     const bag = getBagItems();
     const gems = getGemsList();
     const scrap = getScrapMetal();
+    const foodCnt = getUpgradeTokens('pet');
+    const bpCnt = getUpgradeTokens('ship');
+    const petLvl = getOwnerLevelInfo('pet').lvl;
+    const shipLvl = getOwnerLevelInfo('ship').lvl;
+
+    let tokensHTML = '';
+    if (foodCnt > 0 || bpCnt > 0) {
+        tokensHTML = `<div class="card-box" style="display:flex; flex-direction:column; gap:5px;">
+            <div style="font-size:11px; color:#e6c280; font-weight:bold;">📦 ПРИПАСЫ РАЗВИТИЯ</div>
+            ${foodCnt > 0 ? `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+                <span>🍖 Астральный Корм (×${foodCnt}) — +25 опыта 🐉</span>
+                <button class="mini-btn green-btn" onclick="consumeOwnerToken('pet','bag')">Покормить</button>
+            </div>` : ''}
+            ${bpCnt > 0 ? `<div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+                <span>📐 Чертёж Инженеров (×${bpCnt}) — +25 опыта 🚀</span>
+                <button class="mini-btn green-btn" onclick="consumeOwnerToken('ship','bag')">Изучить</button>
+            </div>` : ''}
+        </div>`;
+    }
 
     let gemsHTML = '';
     if (gems.length === 0) {
@@ -18,7 +37,7 @@ function renderGuildBagView() {
     } else {
         gemsHTML = '<div class="gem-grid">' + gems.map((g, gIdx) => {
             const gm = GEMS_META[g.type] || GEMS_META.amber;
-            const rm = RARITY_TIERS[g.rank] || RARITY_TIERS[1];
+            const rm = RARITY_TIERS[g.rank] || RARITY_TIERS;
             return `
                 <div class="gem-tile rar-${rm.rank}" onclick="bagSalvageGemByIdx(${gIdx})" title="${rm.name} ${gm.name} (+${rm.gemBonus}) — Нажмите для разборки">
                     <span style="font-size:22px; line-height:1;">${gm.icon}</span>
@@ -36,9 +55,10 @@ function renderGuildBagView() {
         itemsHTML = bag.map((bItem, realIdx) => {
             const owner = bItem.owner;
             const ownerTag = owner === 'pet' ? '🐉' : '🚀';
+            const maxOwnerLvl = owner === 'pet' ? petLvl : shipLvl;
             const sMeta = EQUIP_SLOTS[owner].find(s => s.key === bItem.slotKey);
             const setMeta = EQUIP_SETS[bItem.set] || EQUIP_SETS.flame;
-            const bRar = RARITY_TIERS[bItem.rarity || 1] || RARITY_TIERS[1];
+            const bRar = RARITY_TIERS[bItem.rarity || 1] || RARITY_TIERS;
             const equip = getEquipStorage(owner);
             const equipped = equip[bItem.slotKey];
             const eqRarRank = equipped ? (equipped.rarity || 1) : 0;
@@ -48,7 +68,11 @@ function renderGuildBagView() {
                 btns += `<button class="mini-btn green-btn" onclick="bagEquipByRealIdx(${realIdx})">Надеть</button>`;
             } else {
                 if (eqRarRank === bRar.rank && equipped.lvl < 7) {
-                    btns += `<button class="mini-btn green-btn" onclick="bagMergeByRealIdx(${realIdx})">+1 Ур.</button>`;
+                    if (equipped.lvl < maxOwnerLvl) {
+                        btns += `<button class="mini-btn green-btn" onclick="bagMergeByRealIdx(${realIdx})">+1 Ур.</button>`;
+                    } else {
+                        btns += `<button class="mini-btn disabled-btn" onclick="alert('Чтобы улучшить вещь до ${equipped.lvl + 1} ур., сначала поднимите уровень ${owner === 'pet' ? 'Питомца' : 'Корабля'} до ${equipped.lvl + 1} ур.!')" title="Нужен ${equipped.lvl + 1} ур. владельца">🔒Ур.${equipped.lvl + 1}</button>`;
+                    }
                 }
                 const repLabel = bRar.rank > eqRarRank ? `Надеть ${bRar.tag}` : 'Заменить';
                 btns += `<button class="mini-btn" onclick="bagEquipByRealIdx(${realIdx})">${repLabel}</button>`;
@@ -67,6 +91,7 @@ function renderGuildBagView() {
     }
 
     body.innerHTML = `
+        ${tokensHTML}
         <div class="card-box">
             <div style="display:flex; justify-content:space-between; font-size:11px; color:#e6c280; font-weight:bold; margin-bottom:5px;">
                 <span>💎 САМОЦВЕТЫ (${gems.length})</span>

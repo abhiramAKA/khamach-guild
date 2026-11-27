@@ -30,22 +30,20 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
     border-bottom: 1px dashed #4a3f2c; padding-bottom: 5px; margin-bottom: 8px; display: block;
 }
 
-.res-bar { display: flex; justify-content: center; width: 100%; margin-bottom: 9px; }
-
 .guild-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; margin-bottom: 10px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; width: 100%; margin-bottom: 8px;
 }
 
 .tile-btn {
-    aspect-ratio: 1.35 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 5px; background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
+    aspect-ratio: 1.75 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
     border: 1px solid #544432; border-radius: 4px; color: #cdb38c; cursor: pointer;
-    box-shadow: 0 5px 10px rgba(0,0,0,0.6); transition: all 0.15s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.6); transition: all 0.15s ease;
 }
-.tile-btn:hover { border-color: #cbb281; color: #fff; box-shadow: 0 0 15px rgba(203,178,129,0.45); }
+.tile-btn:hover { border-color: #cbb281; color: #fff; box-shadow: 0 0 12px rgba(203,178,129,0.45); }
 .tile-btn:active { transform: scale(0.97); }
-.tile-icon { font-size: 38px; line-height: 1; }
-.tile-label { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+.tile-icon { font-size: 30px; line-height: 1; }
+.tile-label { font-size: 11px; font-weight: bold; letter-spacing: 0.4px; }
 
 .gear-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; }
 .gem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
@@ -70,14 +68,31 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
 .rar-5 { background: linear-gradient(to bottom, #423c0c, #211e05); border: 1px solid #ffe600; box-shadow: 0 0 11px rgba(255,230,0,0.55); }
 .rar-6 { background: linear-gradient(to bottom, #471414, #240909); border: 1px solid #ff3b3b; box-shadow: 0 0 13px rgba(255,59,59,0.65); }
 
+.hex-board { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; }
+.hex-row { display: flex; justify-content: center; gap: 6px; margin-top: -6px; }
+.hex-row:first-child { margin-top: 0; }
+.hex-cell {
+    width: 48px; height: 54px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: bold; cursor: pointer; transition: transform 0.12s ease;
+}
+.hex-cell:active { transform: scale(0.92); }
+.hex-owned { background: linear-gradient(to bottom, #2c5e2e, #163317); color: #a8f0aa; }
+.hex-enemy { background: linear-gradient(to bottom, #6e2222, #381010); color: #ffb3ba; }
+.hex-big {
+    width: 118px; height: 132px; margin: 8px auto;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 38px; cursor: pointer; touch-action: none;
+}
+
 .sub-body {
     flex: 1; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.4);
     border: 1px solid #4a3f2c; border-radius: 4px; padding: 8px; margin-bottom: 10px;
     font-size: 12px; color: #cdb38c; display: flex; flex-direction: column; gap: 7px;
 }
-
 .card-box { padding: 8px; border: 1px solid #544432; background: rgba(20,16,14,0.92); border-radius: 4px; }
-
 .menu-btn, .mini-btn {
     font-family: 'Georgia', serif; font-weight: bold; color: #cdb38c;
     background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
@@ -89,7 +104,6 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
 .purple-btn { background: linear-gradient(to bottom, #2f1942, #170b21); border-color: #7d3cb5; color: #f0d6ff; }
 .disabled-btn { opacity: 0.4; cursor: not-allowed; }
 .gold-text { color: #ffd700; cursor: default; }
-
 .back-tint { background: linear-gradient(to bottom, #421e1e 0%, #241010 100%); border-color: #6e3131; color: #e6aaaa; }
 .ship-canvas {
     width: 100%; height: 240px; background: radial-gradient(circle at top, #1b1226 0%, #07050a 100%);

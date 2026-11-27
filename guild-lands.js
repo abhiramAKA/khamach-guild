@@ -1,11 +1,11 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ВЛАДЕНИЯ ОРДЕНА: ГЕКСЫ, НАБЕГИ И ОТКАТ УРОВНЯ (v2.7.0)
+   ОРДЕН КХАМАЧА — ВЛАДЕНИЯ ОРДЕНА: ГЕКСЫ, НАБЕГИ И ОТКАТ УРОВНЯ (v2.7.1)
    ========================================================================== */
 
 const HEX_TOTAL = 19;
-const HEX_ROWS = [,,,,];
+const HEX_ROW_COUNTS = '3,4,5,4,3';
 const LAND_MAX_ENERGY = 10;
-const LAND_ENERGY_REGEN_MS = 900000; // 1 энергия каждые 15 минут
+const LAND_ENERGY_REGEN_MS = 900000;
 
 let hexHoldTimer = null;
 
@@ -16,7 +16,6 @@ function stopHexHoldLoop() {
     }
 }
 
-// Скорость набегов варваров растёт с уровнем укреплений: от 30 мин на Ур.1 до 6 мин на Ур.9+
 function getBarbarianRaidIntervalMs(level) {
     const mins = Math.max(6, 30 - (level - 1) * 3);
     return mins * 60000;
@@ -56,10 +55,9 @@ function getGuildLandsState() {
             const attackCount = Math.min(ownedIndices.length, raids * 2);
             for (let k = 0; k < attackCount; k++) {
                 const pickPos = Math.floor(Math.random() * ownedIndices.length);
-                const hexIdx = ownedIndices.splice(pickPos, 1);
+                const hexIdx = ownedIndices.splice(pickPos, 1).at(0);
                 st.hexes[hexIdx] = false;
             }
-            // Если варвары отбили вообще все 19 клеток — уровень укреплений откатывается на 1-й
             if (st.hexes.every(v => !v) && st.level > 1) {
                 st.level = 1;
             }
@@ -99,14 +97,17 @@ function renderGuildLandsView() {
     document.getElementById('sub-view-subtitle').innerText = `Укрепление Ур.${st.level} | Очищено: ${ownedCount}/${HEX_TOTAL}`;
 
     let rowsHTML = '';
-    HEX_ROWS.forEach(rowIndices => {
-        const cells = rowIndices.map(idx => {
+    let curIdx = 0;
+    HEX_ROW_COUNTS.split(',').map(Number).forEach(count => {
+        let cells = '';
+        for (let i = 0; i < count; i++) {
+            const idx = curIdx++;
             const isOwned = st.hexes[idx];
             const cls = isOwned ? 'hex-owned' : 'hex-enemy';
             const icon = isOwned ? '🛡️' : '⚔️';
             const clickAttr = isOwned ? '' : `onclick="openHexCaptureView(${idx})"`;
-            return `<div class="hex-cell ${cls}" ${clickAttr}><span>${icon}</span></div>`;
-        }).join('');
+            cells += `<div class="hex-cell ${cls}" ${clickAttr}><span>${icon}</span></div>`;
+        }
         rowsHTML += `<div class="hex-row">${cells}</div>`;
     });
 

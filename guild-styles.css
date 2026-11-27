@@ -31,25 +31,23 @@ h2 { font-size: 19px; color: #e6c280; margin: 0 0 4px 0; text-shadow: 0 2px 4px 
 }
 
 .res-bar {
-    display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
-    background: rgba(0,0,0,0.45); border: 1px solid #3a3025; border-radius: 4px;
-    padding: 6px; margin-bottom: 10px; font-size: 11px; color: #cdb38c;
+    display: flex; justify-content: center; width: 100%; margin-bottom: 9px;
 }
 
 .guild-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; margin-bottom: 12px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; margin-bottom: 10px;
 }
 
 .tile-btn {
-    aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 6px; background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
+    aspect-ratio: 1.35 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
     border: 1px solid #544432; border-radius: 4px; color: #cdb38c; cursor: pointer;
     box-shadow: 0 5px 10px rgba(0,0,0,0.6); transition: all 0.15s ease;
 }
 
 .tile-btn:hover { border-color: #cbb281; color: #fff; box-shadow: 0 0 15px rgba(203,178,129,0.45); }
 .tile-btn:active { transform: scale(0.97); }
-.tile-icon { font-size: 50px; line-height: 1; }
+.tile-icon { font-size: 38px; line-height: 1; }
 .tile-label { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
 
 .sub-body {

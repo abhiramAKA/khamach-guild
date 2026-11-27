@@ -8,8 +8,8 @@
     <meta http-equiv="Expires" content="0">
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
+        window.GUILD_VERSION = "v2.0.2-BETA";
         (function() {
-            window.GUILD_VERSION = "v2.0.0-BETA";
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
@@ -37,9 +37,17 @@
                 s.src = scripts[idx] + '?v=' + window.GUILD_VERSION + '&t=' + buster;
                 s.async = false;
                 s.onload = function() { loadSeq(idx + 1); };
+                s.onerror = function() {
+                    const ft = document.getElementById('guild-version-footer');
+                    if (ft) ft.innerText = 'Ошибка загрузки: ' + scripts[idx] + ' | ' + window.GUILD_VERSION;
+                };
                 document.head.appendChild(s);
             }
-            document.addEventListener('DOMContentLoaded', function() { loadSeq(0); });
+            document.addEventListener('DOMContentLoaded', function() {
+                const ft = document.getElementById('guild-version-footer');
+                if (ft) ft.innerText = 'Орден Кхамача | Сборка ' + window.GUILD_VERSION;
+                loadSeq(0);
+            });
         })();
     </script>
 </head>
@@ -73,7 +81,7 @@
                     <span class="tile-label">Корабль</span>
                 </button>
             </div>
-            <div id="guild-version-footer" class="version-footer"></div>
+            <div id="guild-version-footer" class="version-footer">Орден Кхамача | Сборка v2.0.2-BETA</div>
         </div>
 
         <div id="guild-sub-screen" class="guild-window" style="display: none;">

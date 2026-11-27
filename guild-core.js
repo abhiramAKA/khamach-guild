@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.7.0-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -44,16 +44,14 @@ function getSharedSquadLevel() {
 
 function renderGuildHeaderStats() {
     const lvl = getSharedSquadLevel();
-    const bagCount = getBagItems().length;
-    const gemsCount = getGemsList().length;
+    const totalBag = getBagItems().length + getGemsList().length;
 
     const lvlBadge = document.getElementById('guild-lvl-badge');
     if (lvlBadge) lvlBadge.innerText = `👑 ${lvl}`;
 
-    const resBar = document.getElementById('guild-resources-bar');
-    if (resBar) {
-        const badge = (bagCount + gemsCount) > 0 ? ` (${bagCount + gemsCount})` : '';
-        resBar.innerHTML = `<button class="menu-btn" style="padding:7px; font-size:12px;" onclick="openGuildView('bag')">🎒 Рюкзак и Склад Ордена${badge}</button>`;
+    const bagLabel = document.getElementById('bag-tile-label');
+    if (bagLabel) {
+        bagLabel.innerText = totalBag > 0 ? `Рюкзак (${totalBag})` : 'Рюкзак';
     }
 }
 
@@ -66,6 +64,7 @@ function setSubViewBack(target, label) {
 function openGuildView(viewKey) {
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
+    if (typeof stopHexHoldLoop === 'function') stopHexHoldLoop();
 
     document.getElementById('guild-main-screen').style.display = 'none';
     document.getElementById('guild-sub-screen').style.display = 'flex';
@@ -73,6 +72,7 @@ function openGuildView(viewKey) {
 
     if (viewKey === 'pet' && typeof renderOwnerHubView === 'function') renderOwnerHubView('pet');
     else if (viewKey === 'ship' && typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
+    else if (viewKey === 'lands' && typeof renderGuildLandsView === 'function') renderGuildLandsView();
     else if (viewKey === 'bag' && typeof renderGuildBagView === 'function') renderGuildBagView();
     else renderComingSoonSection(viewKey);
 }
@@ -87,8 +87,10 @@ function closeGuildView() {
     }
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
+    if (typeof stopHexHoldLoop === 'function') stopHexHoldLoop();
 
     const back = window.currentSubBackTarget || 'main';
+    if (back === 'lands' && typeof renderGuildLandsView === 'function') { renderGuildLandsView(); return; }
     if (back.startsWith('item:')) {
         const p = back.split(':');
         if (typeof renderItemDetailView === 'function') { renderItemDetailView(p, p); return; }
@@ -106,9 +108,9 @@ function closeGuildView() {
 function renderComingSoonSection(key) {
     const meta = {
         skills: { title: "🌳 ДРЕВО НАВЫКОВ", sub: "Древние знания и перки Ордена", icon: "🌳", desc: "Здесь откроется ветвь развития всего Ордена Кхамача. Вы сможете усиливать доход золота в Ратуше, увеличивать удачу при поиске редких самоцветов, сокращать время космических походов Питомца и открывать пассивные боевые таланты." },
-        altar:  { title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ", sub: "Клановые рейды и ритуалы", icon: "⛩️", desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов и Призрачных драконов. },
-        farm:   { title: "🌾 АСТРАЛЬНАЯ ФЕРМА", sub: "Выращивание редких трав", icon: "🌾", desc: "Личные угодья Ордена под куполом Цитадели. Здесь вы сможете высаживать космические семена, собирать урожай магических растений и самостоятельно варить Зелья и лакомства для своего Питомца." },
-        shop:   { title: "🏪 ЛАВКА ОРДЕНА", sub: "Торговый пост Предела", icon: "🏪", desc: "Торговля во внешнем мире, а так же закрытый рынок для членов Ордена. Скоро здесь появится обмен Металлолома и золота на древние чертежи экипировки, сундуки с самоцветами, ремонтные наборы и редкие артефакты." }
+        altar:  { title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ", sub: "Клановые рейды и ритуалы", icon: "⛩️", desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Металлолом и самоцветы, пробуждать скрытые свойства снаряжения и получать общие благословения перед вылетом." },
+        farm:   { title: "🌾 АСТРАЛЬНАЯ ФЕРМА", sub: "Выращивание редких трав", icon: "🌾", desc: "Личные угодья Ордена под куполом Цитадели. Здесь вы сможете высаживать космические семена, собирать урожай целебных кристаллов и самостоятельно варить Зелья исцеления и лакомства для ускорения Питомца." },
+        shop:   { title: "🏪 ЛАВКА ОРДЕНА", sub: "Торговый пост Предела", icon: "🏪", desc: "Закрытый рынок для членов Ордена. Скоро здесь появится обмен Металлолома и золота на недостающие чертежи экипировки, сундуки с самоцветами, ремонтные наборы и редкие артефакты." }
     };
     const info = meta[key] || meta.skills;
     document.getElementById('sub-view-title').innerText = info.title;
@@ -120,7 +122,7 @@ function initGuildModule() {
     initGuildStorageDefaults();
     renderGuildHeaderStats();
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.5.0-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.7.0-BETA'}`;
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) backBtn.onclick = function() { window.location.href = MAIN_HUB_RETURN_URL + '?t=' + Date.now(); };
 }

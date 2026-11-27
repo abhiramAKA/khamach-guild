@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЗАПУСК ПОЛЁТА И УПРАВЛЕНИЕ КОРАБЛЁМ (v2.0.0-BETA)
+   ОРДЕН КХАМАЧА — ЗАПУСК ПОЛЁТА И УПРАВЛЕНИЕ КОРАБЛЁМ (v2.0.1-BETA)
    ========================================================================== */
 
 let shipKeyDownHandler = null;
@@ -16,7 +16,7 @@ function clearShipControls() {
     }
 }
 
-function launchShipRaidView() {
+window.launchShipRaidView = function() {
     if (typeof setSubViewBack === 'function') setSubViewBack('ship', '↩️ Прервать полёт');
     const titleEl = document.getElementById('sub-view-title');
     const subEl = document.getElementById('sub-view-subtitle');
@@ -26,7 +26,7 @@ function launchShipRaidView() {
     if (titleEl) titleEl.innerText = "🚀 ПОЛЁТ НА БОССА";
     if (subEl) subEl.innerText = "Стрелки / A-D / Кнопки — уворот, Пробел — зелье";
 
-    const potions = getHealPotions();
+    const potions = typeof getHealPotions === 'function' ? getHealPotions() : 0;
     bodyEl.innerHTML = `
         <canvas id="ship-battle-canvas" class="ship-canvas" width="360" height="240"></canvas>
         <div class="ship-controls">
@@ -35,10 +35,13 @@ function launchShipRaidView() {
             <button id="ship-right-btn" class="menu-btn">ВПРАВО ➡️</button>
         </div>
     `;
-    if (typeof startShipMinigame === 'function') startShipMinigame();
-}
 
-window.launchShipRaidView = launchShipRaidView;
+    if (typeof window.startShipMinigame === 'function') {
+        window.startShipMinigame();
+    } else {
+        alert("Модуль боя (guild-ship-game.js) не загружен! Проверьте наличие файла guild-ship-game.js в репозитории.");
+    }
+};
 
 function bindShipInputs(canvas, state, maxHP) {
     clearShipControls();

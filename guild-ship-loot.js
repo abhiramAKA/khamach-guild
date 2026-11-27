@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛУТ ПО ПОРОГАМ УРОНА И ИЗНОС СНАРЯЖЕНИЯ (v1.9.0-BETA)
+   ОРДЕН КХАМАЧА — ЛУТ ПО ПОРОГАМ УРОНА И ИЗНОС СНАРЯЖЕНИЯ (v2.0.0-BETA)
    ========================================================================== */
 
 function applyPostBattleWear() {
@@ -74,12 +74,10 @@ function grantEndlessBossRewards(damageDealt) {
         report.push(`${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(droppedGem.type, droppedGem.rank)})`);
     }
 
-    renderGuildHeaderStats();
-
     if (report.length === 0) {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10 прочности). Трофеи не выпали.`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%). Трофеи не выпали.`);
     } else {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10 прочности).\n\nДобыто:\n• ${report.join('\n• ')}`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (сложено в Рюкзак):\n• ${report.join('\n• ')}`);
     }
-    renderOwnerEquipView('ship');
+    if (typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
 }

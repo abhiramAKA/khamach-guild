@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
-        window.GUILD_VERSION = "v2.0.2-BETA";
+        window.GUILD_VERSION = "v2.0.3-BETA";
         (function() {
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
@@ -26,6 +26,7 @@
                 'guild-ship-audio.js',
                 'guild-ship-ctrl.js',
                 'guild-ship-loot.js',
+                'guild-ship-render.js',
                 'guild-ship-game.js'
             ];
             function loadSeq(idx) {
@@ -39,7 +40,7 @@
                 s.onload = function() { loadSeq(idx + 1); };
                 s.onerror = function() {
                     const ft = document.getElementById('guild-version-footer');
-                    if (ft) ft.innerText = 'Ошибка загрузки: ' + scripts[idx] + ' | ' + window.GUILD_VERSION;
+                    if (ft) ft.innerText = 'Ошибка файла: ' + scripts[idx] + ' | ' + window.GUILD_VERSION;
                 };
                 document.head.appendChild(s);
             }
@@ -81,7 +82,7 @@
                     <span class="tile-label">Корабль</span>
                 </button>
             </div>
-            <div id="guild-version-footer" class="version-footer">Орден Кхамача | Сборка v2.0.2-BETA</div>
+            <div id="guild-version-footer" class="version-footer">Орден Кхамача | Сборка v2.0.3-BETA</div>
         </div>
 
         <div id="guild-sub-screen" class="guild-window" style="display: none;">

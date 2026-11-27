@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И ЭКСПЕДИЦИИ ПИТОМЦА (v1.6.0-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, МЕТАЛЛОЛОМ И ЭКСПЕДИЦИИ (v1.9.0-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -10,14 +10,15 @@ function initGuildStorageDefaults() {
     if (!localStorage.getItem('khamach_guild_v3_init')) {
         localStorage.setItem('khamach_guild_v3_init', 'true');
         localStorage.setItem('khamach_astral_dust', '10');
-        setHealPotions(2); // 2 стартовых зелья лечения для первых полётов
+        setScrapMetal(15);
+        setHealPotions(2);
 
         saveEquipStorage('pet', {
-            claw: { lvl: 1, set: 'flame', gems: [], enchant: null }
+            claw: { lvl: 1, set: 'flame', rarity: 1, durability: 100, gems: [], enchant: null }
         });
         saveEquipStorage('ship', {
-            cannon: { lvl: 1, set: 'flame', gems: [], enchant: null },
-            hull:   { lvl: 1, set: 'frost', gems: [], enchant: null }
+            cannon: { lvl: 1, set: 'flame', rarity: 1, durability: 100, gems: [], enchant: null },
+            hull:   { lvl: 1, set: 'frost', rarity: 1, durability: 100, gems: [], enchant: null }
         });
         saveBagItems([]);
         saveGemsList([
@@ -25,6 +26,9 @@ function initGuildStorageDefaults() {
             { type: 'emerald', rank: 1 },
             { type: 'topaz', rank: 2 }
         ]);
+    }
+    if (localStorage.getItem('khamach_scrap_metal') === null) {
+        setScrapMetal(15);
     }
 }
 
@@ -42,7 +46,7 @@ function getSharedSquadLevel() {
 
 function renderGuildHeaderStats() {
     const lvl = getSharedSquadLevel();
-    const gold = parseInt(localStorage.getItem('khamach_gold') || '0');
+    const scrap = getScrapMetal();
     const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
     const gems = getGemsList();
     const potions = getHealPotions();
@@ -53,7 +57,7 @@ function renderGuildHeaderStats() {
     const resBar = document.getElementById('guild-resources-bar');
     if (resBar) {
         resBar.innerHTML = `
-            <span style="color:#ffd700;">🪙 ${gold.toLocaleString('ru-RU')}</span> |
+            <span style="color:#cdb38c;">🔩 Лом: ${scrap}</span> |
             <span style="color:#e58cff;">✨ ${dust}</span> |
             <span style="color:#8cd1ff;">💎 ${gems.length}</span> |
             <span style="color:#2ecc71;">🧪 ${potions}</span>
@@ -103,7 +107,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка v1.6.0-BETA`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка v1.9.0-BETA`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

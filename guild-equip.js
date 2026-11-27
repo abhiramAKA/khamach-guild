@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ С КНОПКОЙ СПРАВКИ ❓ (v2.5.0-BETA)
+   ОРДЕН КХАМАЧА — ЭКРАН ПИТОМЦА/КОРАБЛЯ СО ШКАЛОЙ ОПЫТА И УРОВНЕМ (v2.8.0)
    ========================================================================== */
 
 function showOwnerHelpModal(owner) {
@@ -7,15 +7,15 @@ function showOwnerHelpModal(owner) {
         alert(
             "🌌 КОСМИЧЕСКОЕ ПУТЕШЕСТВИЕ ПИТОМЦА\n\n" +
             "Ваш питомец отправляется в неизведанные сектора Астрала на 1 час, обыскивая обломки древних дредноутов и заброшенные станции.\n\n" +
-            "• Добыча: модули и обшивка для Корабля (от Обычных до Мифических), а также 🧪 Зелья исцеления.\n" +
-            "• Важно: пока питомец в походе, он не помогает Кораблю в бою с Боссом. Чем выше Боевая Мощь питомца, тем больше обломков он принесёт."
+            "• Добыча: модули и обшивка для Корабля, а также 🧪 Зелья исцеления.\n" +
+            "• Уровень Питомца: повышается при кормлении 🍖 Астральным Кормом (добывается во Владениях). Уровень Питомца открывает скрещивание его одежды до того же уровня!"
         );
     } else {
         alert(
             "🚀 ОХОТА НА АСТРАЛЬНОГО ЛЕВИАФАНА\n\n" +
-            "Вы выводите Астральный Корабль в открытый космос на битву с древним чудищем Бездны. Бой идёт на выживание: каждые 10 секунд Босс выпускает неотвратимую Астральную Волну.\n\n" +
-            "• Добыча: экипировка для Питомца и 💎 Самоцветы (🟠 Янтарь, ⚪ Жемчуг, ⚫ Обсидиан).\n" +
-            "• Правило тиров: чем больше урона вы успеете нанести до гибели корабля (500 / 1400 / 3000 / 5500 / 9000+), тем более редкие вещи и камни выпадут."
+            "Вы выводите Астральный Корабль на битву с древним чудищем Бездны. Каждые 10 секунд Босс выпускает неотвратимую Астральную Волну.\n\n" +
+            "• Добыча: экипировка для Питомца и 💎 Самоцветы.\n" +
+            "• Уровень Корабля: повышается при изучении 📐 Чертежей Инженеров (добываются во Владениях). Уровень Корабля открывает улучшение его модулей!"
         );
     }
 }
@@ -29,6 +29,14 @@ function renderOwnerHubView(owner) {
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);
     const power = getOwnerPowerScore(stats);
+    const lvlInfo = getOwnerLevelInfo(owner);
+    const tokens = getUpgradeTokens(owner);
+
+    const xpPct = lvlInfo.lvl >= 7 ? 100 : Math.min(100, Math.round((lvlInfo.xp / lvlInfo.req) * 100));
+    const xpText = lvlInfo.lvl >= 7 ? 'МАКС. УРОВЕНЬ (7)' : `Опыт: ${lvlInfo.xp} / ${lvlInfo.req}`;
+    const feedBtnLabel = isPet
+        ? `🍖 Покормить питомца (+25 опыта | в сумке: ${tokens})`
+        : `📐 Изучить чертёж (+25 опыта | в сумке: ${tokens})`;
 
     let mainActionHTML = '';
     let statusLine = '';
@@ -61,22 +69,29 @@ function renderOwnerHubView(owner) {
         mainActionHTML = `<button class="menu-btn purple-btn" onclick="triggerShipFlightSafe()">🚀 В ПОЛЁТ НА БОССА</button>`;
     }
 
+    const feedButtonHTML = (lvlInfo.lvl < 7 && tokens > 0)
+        ? `<button class="menu-btn green-btn" style="font-size:11px; padding:7px;" onclick="consumeOwnerToken('${owner}','hub')">${feedBtnLabel}</button>`
+        : '';
+
     body.innerHTML = `
-        <div class="card-box" style="text-align:center; padding:14px 10px; position:relative;">
-            <button class="mini-btn" onclick="showOwnerHelpModal('${owner}')" style="position:absolute; top:8px; right:8px; font-size:12px; padding:4px 8px;" title="Справка">❓</button>
-            <div style="font-size:56px; line-height:1; margin-bottom:6px;">${isPet ? '🐲' : '🚀'}</div>
-            <div style="font-size:15px; font-weight:bold; color:#ffd700; margin-bottom:4px;">Боевая Мощь: ⚡ ${power}</div>
-            <div style="font-size:11px; color:#cdb38c; line-height:1.45; margin-bottom:12px;">${statusLine}</div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
+        <div class="card-box" style="text-align:center; padding:12px 10px; position:relative;">
+            <button class="mini-btn" onclick="showOwnerHelpModal('${owner}')" style="position:absolute; top:8px; right:8px; font-size:12px; padding:4px 8px;">❓</button>
+            <div style="font-size:48px; line-height:1; margin-bottom:4px;">${isPet ? '🐲' : '🚀'}</div>
+            <div style="font-size:14px; font-weight:bold; color:#ffd700;">Уровень ${lvlInfo.lvl} / 7 | Мощь: ⚡ ${power}</div>
+            <div style="font-size:10px; color:#8cd1ff; margin:3px 0;">${xpText}</div>
+            <div style="width:85%; height:8px; background:#14100e; border:1px solid #544432; border-radius:4px; margin:0 auto 8px auto; overflow:hidden;">
+                <div style="width:${xpPct}%; height:100%; background:linear-gradient(to right, #4da6ff, #ffd700);"></div>
+            </div>
+            <div style="font-size:11px; color:#cdb38c; line-height:1.4; margin-bottom:10px;">${statusLine}</div>
+            <div style="display:flex; flex-direction:column; gap:7px;">
                 ${mainActionHTML}
+                ${feedButtonHTML}
                 <button class="menu-btn" onclick="renderOwnerGearConfig('${owner}')">⚙️ Характеристики и Снаряжение</button>
             </div>
         </div>
     `;
 
-    if (isPet && isPetOnExpedition() && typeof startPetExpTicker === 'function') {
-        startPetExpTicker();
-    }
+    if (isPet && isPetOnExpedition() && typeof startPetExpTicker === 'function') startPetExpTicker();
 }
 
 function triggerShipFlightSafe() {
@@ -85,15 +100,15 @@ function triggerShipFlightSafe() {
         return;
     }
     const ft = document.getElementById('guild-version-footer');
-    const errInfo = ft ? ft.innerText : 'Неизвестная ошибка загрузки скриптов';
-    alert("Полёт не запустился. Причина:\n" + errInfo);
+    alert("Полёт не запустился. Причина:\n" + (ft ? ft.innerText : 'Ошибка загрузки'));
 }
 
 function renderOwnerGearConfig(owner) {
     const isPet = owner === 'pet';
     setSubViewBack(owner, isPet ? '↩️ Назад к Питомцу' : '↩️ Назад к Кораблю');
+    const lvlInfo = getOwnerLevelInfo(owner);
     document.getElementById('sub-view-title').innerText = isPet ? "⚙️ СНАРЯЖЕНИЕ ПИТОМЦА" : "⚙️ МОДУЛИ КОРАБЛЯ";
-    document.getElementById('sub-view-subtitle').innerText = "Нажмите на ячейку для осмотра и улучшения";
+    document.getElementById('sub-view-subtitle').innerText = `Макс. уровень вещей: Ур.${lvlInfo.lvl} (зависит от уровня владельца)`;
 
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);
@@ -108,8 +123,6 @@ function renderOwnerGearConfig(owner) {
                 <div>💚 Реген<br><strong>${stats.reg}</strong></div>
             </div>
         </div>
-        <div class="gear-grid">
-            ${slotsHTML}
-        </div>
+        <div class="gear-grid">${slotsHTML}</div>
     `;
 }

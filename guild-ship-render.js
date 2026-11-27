@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ И АСТРАЛЬНОЙ ВОЛНЫ (v2.1.2-BETA)
+   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ И ПОРОГА 500 УРОНА (v2.3.0-BETA)
    ========================================================================== */
 
 function renderShipBattleFrame(ctx, canvas, state, cfg) {
@@ -43,7 +43,7 @@ function renderShipBattleFrame(ctx, canvas, state, cfg) {
     const curDmg = Math.floor(state.damageDealt);
     const tierInfo = typeof getShipLootTierByDamage === 'function'
         ? getShipLootTierByDamage(curDmg)
-        : { label: 'Без награды', nextGoal: 1500 };
+        : { label: 'Без награды', nextGoal: 500 };
     const goalStr = tierInfo.nextGoal > 0 ? '-> ' + tierInfo.nextGoal : 'МАКС!';
 
     ctx.fillStyle = "rgba(0,0,0,0.65)";

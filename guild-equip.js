@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.0.0)
+   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.0.5)
    ========================================================================== */
 
 function renderOwnerHubView(owner) {
@@ -40,7 +40,7 @@ function renderOwnerHubView(owner) {
             ? `<span style="color:#ffb3ba;">Питомец в походе (летите один)</span>`
             : `<span style="color:#2ecc71;">Питомец в строю (+статы)</span>`;
         statusLine = `🏆 Рекорд: <strong>${bestDmg.toLocaleString('ru-RU')}</strong> | 🧪 Зелий: <strong>${potions}</strong><br>${petState}`;
-        mainActionHTML = `<button id="start-boss-flight-btn" class="menu-btn purple-btn">🚀 В ПОЛЁТ НА БОССА</button>`;
+        mainActionHTML = `<button class="menu-btn purple-btn" onclick="triggerShipFlightSafe()">🚀 В ПОЛЁТ НА БОССА</button>`;
     }
 
     body.innerHTML = `
@@ -55,16 +55,19 @@ function renderOwnerHubView(owner) {
         </div>
     `;
 
-    if (!isPet) {
-        const flightBtn = document.getElementById('start-boss-flight-btn');
-        if (flightBtn) {
-            flightBtn.onclick = function() {
-                if (typeof launchShipRaidView === 'function') launchShipRaidView();
-            };
-        }
-    } else if (isPetOnExpedition() && typeof startPetExpTicker === 'function') {
+    if (isPet && isPetOnExpedition() && typeof startPetExpTicker === 'function') {
         startPetExpTicker();
     }
+}
+
+function triggerShipFlightSafe() {
+    if (typeof window.launchShipRaidView === 'function') {
+        window.launchShipRaidView();
+        return;
+    }
+    const ft = document.getElementById('guild-version-footer');
+    const errInfo = ft ? ft.innerText : 'Неизвестная ошибка загрузки скриптов';
+    alert("Полёт не запустился. Причина:\n" + errInfo + "\n\nПроверьте, что все файлы из списка scripts в index.html загружены в репозиторий.");
 }
 
 function renderOwnerGearConfig(owner) {

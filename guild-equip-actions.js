@@ -1,6 +1,14 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ СО СНАРЯЖЕНИЕМ, КАМНЯМИ И ПОХОДОМ (v1.2.1-BETA)
+   ОРДЕН КХАМАЧА — ДЕЙСТВИЯ СО СНАРЯЖЕНИЕМ, КАМНЯМИ И ПОХОДОМ (v1.6.0-BETA)
    ========================================================================== */
+
+function rollRandomGemDrop() {
+    const gKeys = Object.keys(GEMS_META);
+    const type = gKeys[Math.floor(Math.random() * gKeys.length)];
+    const rRoll = Math.random() * 100;
+    const rank = rRoll < 50 ? 1 : (rRoll < 80 ? 2 : (rRoll < 95 ? 3 : 4));
+    return { type: type, rank: rank };
+}
 
 function findRealBagIndex(owner, ownerIdx) {
     const allBag = getBagItems();
@@ -61,20 +69,25 @@ function salvageFromBag(owner, ownerIdx) {
 }
 
 function openGemSocketPicker(owner, slotKey) {
-    const gems = getGemsStorage();
-    const avail = Object.keys(GEMS_META).filter(k => gems[k] > 0);
-    if (avail.length === 0) return;
+    const gems = getGemsList();
+    if (gems.length === 0) return;
 
-    const choice = avail[0];
+    gems.sort((a, b) => (b.rank || 1) - (a.rank || 1));
+    const chosenGem = gems.shift();
+
     const equip = getEquipStorage(owner);
     const item = equip[slotKey];
     if (!item || (item.gems || []).length >= (item.lvl - 1)) return;
 
-    gems[choice] -= 1;
-    saveGemsStorage(gems);
+    saveGemsList(gems);
     item.gems = item.gems || [];
-    item.gems.push(choice);
+    item.gems.push(chosenGem);
     saveEquipStorage(owner, equip);
+
+    const rm = GEM_RARITIES[chosenGem.rank] || GEM_RARITIES[1];
+    const gm = GEMS_META[chosenGem.type];
+    alert(`Вставлен камень: ${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(chosenGem.type, chosenGem.rank)} ${STAT_LABELS[gm.stat]})`);
+
     renderGuildHeaderStats();
     renderOwnerEquipView(owner);
 }
@@ -108,9 +121,9 @@ function claimPetSpaceLoot() {
     if (!st || (Date.now() - st) < PET_EXPEDITION_MS) return;
 
     const power = getOwnerPowerScore(calculateOwnerStats('pet'));
-    const dropCount = Math.max(1, Math.min(4, Math.floor(power / 45) + 1));
+    const dropCount = Math.max(1, Math.min(4, Math.floor(power / 35) + 1));
     const bag = getBagItems();
-    const sets = ['flame', 'abyss', 'storm'];
+    const sets = ['flame', 'abyss', 'storm', 'frost'];
     const shipSlots = EQUIP_SLOTS.ship;
 
     let report = [];
@@ -122,17 +135,23 @@ function claimPetSpaceLoot() {
     }
     saveBagItems(bag);
 
-    if (Math.random() < 0.5) {
-        const gems = getGemsStorage();
-        const gKeys = Object.keys(GEMS_META);
-        const rk = gKeys[Math.floor(Math.random() * gKeys.length)];
-        gems[rk] += 1;
-        saveGemsStorage(gems);
-        report.push(`${GEMS_META[rk].icon} ${GEMS_META[rk].name}`);
+    // Питомец гарантированно приносит 1-2 Зелья исцеления за поход
+    const foundPotions = power >= 60 ? 2 : 1;
+    setHealPotions(getHealPotions() + foundPotions);
+    report.push(`🧪 Зелье исцеления ×${foundPotions}`);
+
+    if (Math.random() < 0.55) {
+        const gems = getGemsList();
+        const droppedGem = rollRandomGemDrop();
+        gems.push(droppedGem);
+        saveGemsList(gems);
+        const rm = GEM_RARITIES[droppedGem.rank];
+        const gm = GEMS_META[droppedGem.type];
+        report.push(`${gm.icon} ${rm.name} ${gm.name} (+${getGemBonusValue(droppedGem.type, droppedGem.rank)})`);
     }
 
     localStorage.removeItem('khamach_pet_exp_start');
     renderGuildHeaderStats();
-    alert(`Питомец вернулся из космоса!\nНайдены обломки кораблей:\n• ${report.join('\n• ')}`);
+    alert(`Питомец вернулся из космоса!\nНайдена добыча:\n• ${report.join('\n• ')}`);
     renderOwnerEquipView('pet');
 }

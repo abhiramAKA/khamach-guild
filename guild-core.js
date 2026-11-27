@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, РЮКЗАК И ОПИСАНИЯ РАЗДЕЛОВ (v2.4.0)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, ПАУЗА БОЯ И НАВИГАЦИЯ (v2.4.3-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -79,6 +79,15 @@ function openGuildView(viewKey) {
 }
 
 function closeGuildView() {
+    if (window.shipGameRunning) {
+        window.shipGamePaused = true;
+        const ok = confirm("Вы действительно хотите прервать полёт? Нанесённый урон и награды за этот вылет не сохранятся.");
+        if (!ok) {
+            window.shipGamePaused = false;
+            return;
+        }
+    }
+
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
 
@@ -150,7 +159,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.4.0-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.4.3-BETA'}`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

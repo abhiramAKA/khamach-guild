@@ -1,12 +1,14 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ: ВОЛНА РАЗ В 10 СЕК И БАЛАНС РЕГЕНА (v2.1.3)
+   ОРДЕН КХАМАЧА — ЦИКЛ БОЯ С ПОДДЕРЖКОЙ ПАУЗЫ (v2.4.3-BETA)
    ========================================================================== */
 
 let shipLoopId = null;
 window.shipGameRunning = false;
+window.shipGamePaused = false;
 
 window.stopShipMinigame = function() {
     window.shipGameRunning = false;
+    window.shipGamePaused = false;
     if (shipLoopId) {
         cancelAnimationFrame(shipLoopId);
         shipLoopId = null;
@@ -53,12 +55,24 @@ window.startShipMinigame = function() {
 
     if (typeof bindShipInputs === 'function') bindShipInputs(canvas, state, cfg.maxHP);
     window.shipGameRunning = true;
+    window.shipGamePaused = false;
 
     function tick() {
         if (!window.shipGameRunning) return;
+
+        if (window.shipGamePaused) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
+            ctx.fillRect(0, 100, canvas.width, 40);
+            ctx.fillStyle = "#ffd700";
+            ctx.font = "bold 16px Georgia";
+            ctx.textAlign = "center";
+            ctx.fillText("⏸ ПАУЗА", 180, 126);
+            shipLoopId = requestAnimationFrame(tick);
+            return;
+        }
+
         state.frame++;
 
-        // Каждые 10 секунд (600 кадров): за 1.5 сек предупреждение, на 600-м кадре — Астральная Волна
         const cyclePos = state.frame % 600;
         if (cyclePos >= 510 && cyclePos < 600) {
             state.novaWarning = 600 - cyclePos;
@@ -86,7 +100,6 @@ window.startShipMinigame = function() {
             }
         }
 
-        // Регенерация раз в 6 секунд (360 кадров) на 15% от параметра Регена
         if (state.frame % 360 === 0 && state.hp < cfg.maxHP) {
             const healTick = Math.max(0.2, Number((cfg.totalReg * 0.15).toFixed(1)));
             state.hp = Math.min(cfg.maxHP, Number((state.hp + healTick).toFixed(1)));

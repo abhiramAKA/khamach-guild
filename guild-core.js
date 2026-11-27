@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, РЮКЗАК И ОПИСАНИЯ РАЗДЕЛОВ (v2.3.0)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, РЮКЗАК И ОПИСАНИЯ РАЗДЕЛОВ (v2.4.0)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -82,6 +82,14 @@ function closeGuildView() {
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
 
+    if (window.currentSubBackTarget === 'pet_cfg' && typeof renderOwnerGearConfig === 'function') {
+        renderOwnerGearConfig('pet');
+        return;
+    }
+    if (window.currentSubBackTarget === 'ship_cfg' && typeof renderOwnerGearConfig === 'function') {
+        renderOwnerGearConfig('ship');
+        return;
+    }
     if (window.currentSubBackTarget === 'pet' && typeof renderOwnerHubView === 'function') {
         setSubViewBack('main', 'Назад в Орден');
         renderOwnerHubView('pet');
@@ -108,9 +116,9 @@ function renderComingSoonSection(key) {
         },
         altar: {
             title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ",
-            sub: "Слияние стихий и благословение душ",
+            sub: "Клановые рейды, ритуалы и слияние стихий",
             icon: "⛩️",
-            desc: "Священное место для ритуалов. Скоро здесь можно будет приносить в жертву накопленный Астральный Прах и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать временные благословения перед вылетом на Босса."
+            desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Астральный Прах и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать общие клановые благословения перед вылетом."
         },
         farm: {
             title: "🌾 АСТРАЛЬНАЯ ФЕРМА",
@@ -142,7 +150,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.3.0-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.4.0-BETA'}`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

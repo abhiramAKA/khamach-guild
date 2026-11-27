@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — РЕНДЕР СЛОТОВ ЭКИПИРОВКИ И РЕМОНТА (v1.9.1-BETA)
+   ОРДЕН КХАМАЧА — СЛОТЫ ЭКИПИРОВКИ С РЕМОНТОМ, КАМНЯМИ И ЧАРАМИ (v2.0.0)
    ========================================================================== */
 
 function buildActiveSkillsHTML(setCounts) {
@@ -17,12 +17,12 @@ function buildActiveSkillsHTML(setCounts) {
     return items.length > 0 ? items.join('<br>') : '<span style="color:#6a5335;">Наденьте целые вещи стихий, чтобы открыть умения.</span>';
 }
 
-function buildOwnerSlotsHTML(owner, equip, gems, scrap) {
+function buildOwnerSlotsHTML(owner, equip, gems, scrap, dust) {
     let slotsHTML = '';
     EQUIP_SLOTS[owner].forEach(slot => {
         const item = equip[slot.key];
         if (!item || item.lvl < 1) {
-            slotsHTML += `<div style="padding:5px 0; border-bottom:1px dashed #3a3025; color:#6a5335;">${slot.icon} ${slot.name}: <em>Пусто</em></div>`;
+            slotsHTML += `<div style="padding:5px 0; border-bottom:1px dashed #3a3025; color:#6a5335;">${slot.icon} ${slot.name}: <em>Пусто (надевается в Рюкзаке)</em></div>`;
             return;
         }
         const setMeta = EQUIP_SETS[item.set] || EQUIP_SETS.flame;
@@ -30,31 +30,40 @@ function buildOwnerSlotsHTML(owner, equip, gems, scrap) {
         const dur = item.durability !== undefined ? item.durability : 100;
         const isBroken = dur <= 0;
         const durColor = isBroken ? '#ff4500' : (dur < 40 ? '#f1c40f' : '#2ecc71');
-        const durLabel = isBroken ? `❌ СЛОМАНО (0/100)` : `🛡️ ${dur}/100`;
+        const durLabel = isBroken ? `❌ СЛОМАНО` : `🛡️ ${dur}%`;
 
         const maxSockets = Math.max(0, item.lvl - 1);
         const usedGems = item.gems || [];
-        let socketsStr = maxSockets === 0 ? 'Гнёзд: 0' : 'Гнёзда: ';
+        let socketsStr = maxSockets === 0 ? 'Гнёзд: 0' : '';
         for (let i = 0; i < maxSockets; i++) {
-            socketsStr += usedGems[i] ? `${GEMS_META[usedGems[i].type].icon}${(GEM_RARITIES[usedGems[i].rank] || GEM_RARITIES).tag} ` : '⬜ ';
+            socketsStr += usedGems[i] ? `${GEMS_META[usedGems[i].type].icon}${(GEM_RARITIES[usedGems[i].rank] || GEM_RARITIES).tag}` : '⬜';
         }
 
         const repairCost = Math.max(2, Math.ceil((100 - dur) / 10) * 2);
         const repairBtn = dur < 100
-            ? `<button class="mini-btn ${scrap >= repairCost ? 'green-btn' : 'disabled-btn'}" onclick="repairEquipSlot('${owner}','${slot.key}')">🔧${repairCost}🔩</button>`
+            ? `<button class="mini-btn ${scrap >= repairCost ? 'green-btn' : 'disabled-btn'}" onclick="repairEquipSlot('${owner}','${slot.key}')" title="Починить за Лом">🔧${repairCost}</button>`
             : '';
+
         const socketBtn = (!isBroken && usedGems.length < maxSockets && gems.length > 0)
-            ? `<button class="mini-btn green-btn" onclick="openGemSocketPicker('${owner}','${slot.key}')">+💎</button>`
+            ? `<button class="mini-btn green-btn" onclick="openGemSocketPicker('${owner}','${slot.key}')" title="Вставить камень">+💎</button>`
             : '';
-        const enchText = item.enchant ? ` | ✨+${item.enchant.rank * 15}%` : '';
+
+        const enchRank = item.enchant ? item.enchant.rank : 0;
+        const enchCost = (enchRank + 1) * 10;
+        const canEnch = !isBroken && enchRank < 5 && dust >= enchCost;
+        const enchBtn = enchRank < 5
+            ? `<button class="mini-btn ${canEnch ? 'purple-btn' : 'disabled-btn'}" onclick="enchantEquipItem('${owner}','${slot.key}')" title="Наложить чары за Прах">✨${enchCost}</button>`
+            : '';
+
+        const enchText = item.enchant ? ` | ✨${STAT_LABELS[item.enchant.stat]}+${enchRank * 15}%` : '';
 
         slotsHTML += `
             <div style="padding:5px 0; border-bottom:1px dashed #3a3025; display:flex; justify-content:space-between; align-items:center; gap:4px; ${isBroken ? 'opacity:0.75;' : ''}">
                 <div style="font-size:11px;">
                     <strong style="color:${setMeta.color};">${rarMeta.tag} ${slot.icon} ${slot.name} [${setMeta.name}] Ур.${item.lvl}</strong>${enchText}<br>
-                    <span style="font-size:10px; color:${durColor};">${durLabel}</span> | <span style="font-size:10px; color:#bfae96;">${socketsStr}</span>
+                    <span style="font-size:10px; color:${durColor};">${durLabel}</span> <span style="font-size:10px; color:#bfae96;">${socketsStr}</span>
                 </div>
-                <div style="display:flex; gap:3px; flex-shrink:0;">${repairBtn}${socketBtn}</div>
+                <div style="display:flex; gap:3px; flex-shrink:0;">${repairBtn}${socketBtn}${enchBtn}</div>
             </div>
         `;
     });

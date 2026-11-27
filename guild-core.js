@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ, ПАУЗА БОЯ И НАВИГАЦИЯ (v2.4.3-BETA)
+   ОРДЕН КХАМАЧА — ЯДРО СИНХРОНИЗАЦИИ И НАВИГАЦИИ (v2.5.0-BETA)
    ========================================================================== */
 
 const MAIN_HUB_RETURN_URL = '../khamach/hub.html';
@@ -8,10 +8,9 @@ let activeGuildTimer = null;
 window.currentSubBackTarget = 'main';
 
 function initGuildStorageDefaults() {
-    if (!localStorage.getItem('khamach_guild_v3_init')) {
-        localStorage.setItem('khamach_guild_v3_init', 'true');
-        localStorage.setItem('khamach_astral_dust', '15');
-        setScrapMetal(15);
+    if (!localStorage.getItem('khamach_guild_v4_init')) {
+        localStorage.setItem('khamach_guild_v4_init', 'true');
+        setScrapMetal(20);
         setHealPotions(2);
 
         saveEquipStorage('pet', {
@@ -23,12 +22,12 @@ function initGuildStorageDefaults() {
         });
         saveBagItems([]);
         saveGemsList([
-            { type: 'ruby', rank: 1 },
-            { type: 'emerald', rank: 1 },
-            { type: 'topaz', rank: 2 }
+            { type: 'amber', rank: 1 },
+            { type: 'pearl', rank: 1 },
+            { type: 'onyx',  rank: 2 }
         ]);
     }
-    if (localStorage.getItem('khamach_scrap_metal') === null) setScrapMetal(15);
+    if (localStorage.getItem('khamach_scrap_metal') === null) setScrapMetal(20);
 }
 
 function isPetOnExpedition() {
@@ -91,6 +90,13 @@ function closeGuildView() {
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
 
+    if (window.currentSubBackTarget && window.currentSubBackTarget.startsWith('item:')) {
+        const parts = window.currentSubBackTarget.split(':');
+        if (typeof renderItemDetailView === 'function') {
+            renderItemDetailView(parts, parts);
+            return;
+        }
+    }
     if (window.currentSubBackTarget === 'pet_cfg' && typeof renderOwnerGearConfig === 'function') {
         renderOwnerGearConfig('pet');
         return;
@@ -127,7 +133,7 @@ function renderComingSoonSection(key) {
             title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ",
             sub: "Клановые рейды, ритуалы и слияние стихий",
             icon: "⛩️",
-            desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Астральный Прах и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать общие клановые благословения перед вылетом."
+            desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Металлолом и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать общие клановые благословения перед вылетом."
         },
         farm: {
             title: "🌾 АСТРАЛЬНАЯ ФЕРМА",
@@ -159,7 +165,7 @@ function initGuildModule() {
     renderGuildHeaderStats();
 
     const footer = document.getElementById('guild-version-footer');
-    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.4.3-BETA'}`;
+    if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.5.0-BETA'}`;
 
     const backBtn = document.getElementById('back-to-hub-btn');
     if (backBtn) {

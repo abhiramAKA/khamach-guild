@@ -8,7 +8,7 @@
     <meta http-equiv="Expires" content="0">
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
-        window.GUILD_VERSION = "v2.4.2-BETA";
+        window.GUILD_VERSION = "v2.5.0-BETA";
         (function() {
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
@@ -22,6 +22,7 @@
                 'guild-equip-slots.js',
                 'guild-equip.js',
                 'guild-equip-actions.js',
+                'guild-gem-enchant.js',
                 'guild-bag.js',
                 'guild-ship-audio.js',
                 'guild-ship-ctrl.js',
@@ -56,14 +57,14 @@
     <div id="guild-app">
         <div id="guild-main-screen" class="guild-window">
             <div class="guild-header">
-                <button id="back-to-hub-btn" class="mini-btn back-tint" title="Вернуться в Цитадель">↩️ Хаб</button>
+                <button id="back-to-hub-btn" class="mini-btn back-tint" title="Вернуться в Цитадель">↩️</button>
                 <h1>ОРДЕН КХАМАЧА</h1>
                 <span id="guild-lvl-badge" class="mini-btn gold-text">👑 1</span>
             </div>
             <span class="subtitle">Астральный Предел Абхирамбурга</span>
 
             <div id="guild-resources-bar" class="res-bar">
-                <button class="menu-btn" style="padding:7px; font-size:12px;" onclick="openGuildView('bag')">🎒 Открыть Рюкзак и Склад</button>
+                <button class="menu-btn" style="padding:7px; font-size:12px;" onclick="openGuildView('bag')">🎒 Рюкзак и Склад Ордена</button>
             </div>
 
             <div class="guild-grid">
@@ -92,7 +93,7 @@
                     <span class="tile-label">Магазин</span>
                 </button>
             </div>
-            <div id="guild-version-footer" class="version-footer">Орден Кхамача | Сборка v2.3.0-BETA</div>
+            <div id="guild-version-footer" class="version-footer">Орден Кхамача | Сборка v2.5.0-BETA</div>
         </div>
 
         <div id="guild-sub-screen" class="guild-window" style="display: none;">

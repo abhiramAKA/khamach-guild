@@ -80,41 +80,23 @@ function openGuildView(viewKey) {
 function closeGuildView() {
     if (window.shipGameRunning) {
         window.shipGamePaused = true;
-        const ok = confirm("Вы действительно хотите прервать полёт? Нанесённый урон и награды за этот вылет не сохранятся.");
-        if (!ok) {
+        if (!confirm("Вы действительно хотите прервать полёт? Нанесённый урон и награды за этот вылет не сохранятся.")) {
             window.shipGamePaused = false;
             return;
         }
     }
-
     if (activeGuildTimer) { clearInterval(activeGuildTimer); activeGuildTimer = null; }
     if (typeof window.stopShipMinigame === 'function') window.stopShipMinigame();
 
-    if (window.currentSubBackTarget && window.currentSubBackTarget.startsWith('item:')) {
-        const parts = window.currentSubBackTarget.split(':');
-        if (typeof renderItemDetailView === 'function') {
-            renderItemDetailView(parts, parts);
-            return;
-        }
+    const back = window.currentSubBackTarget || 'main';
+    if (back.startsWith('item:')) {
+        const p = back.split(':');
+        if (typeof renderItemDetailView === 'function') { renderItemDetailView(p, p); return; }
     }
-    if (window.currentSubBackTarget === 'pet_cfg' && typeof renderOwnerGearConfig === 'function') {
-        renderOwnerGearConfig('pet');
-        return;
-    }
-    if (window.currentSubBackTarget === 'ship_cfg' && typeof renderOwnerGearConfig === 'function') {
-        renderOwnerGearConfig('ship');
-        return;
-    }
-    if (window.currentSubBackTarget === 'pet' && typeof renderOwnerHubView === 'function') {
-        setSubViewBack('main', 'Назад в Орден');
-        renderOwnerHubView('pet');
-        return;
-    }
-    if (window.currentSubBackTarget === 'ship' && typeof renderOwnerHubView === 'function') {
-        setSubViewBack('main', 'Назад в Орден');
-        renderOwnerHubView('ship');
-        return;
-    }
+    if (back === 'pet_cfg' && typeof renderOwnerGearConfig === 'function') { renderOwnerGearConfig('pet'); return; }
+    if (back === 'ship_cfg' && typeof renderOwnerGearConfig === 'function') { renderOwnerGearConfig('ship'); return; }
+    if (back === 'pet' && typeof renderOwnerHubView === 'function') { renderOwnerHubView('pet'); return; }
+    if (back === 'ship' && typeof renderOwnerHubView === 'function') { renderOwnerHubView('ship'); return; }
 
     document.getElementById('guild-sub-screen').style.display = 'none';
     document.getElementById('guild-main-screen').style.display = 'flex';
@@ -123,54 +105,22 @@ function closeGuildView() {
 
 function renderComingSoonSection(key) {
     const meta = {
-        skills: {
-            title: "🌳 ДРЕВО НАВЫКОВ",
-            sub: "Древние знания и перки Ордена",
-            icon: "🌳",
-            desc: "Здесь откроется ветвь развития всего Ордена Кхамача. Вы сможете усиливать доход золота в Ратуше, увеличивать удачу при поиске редких самоцветов, сокращать время космических походов Питомца и открывать пассивные боевые таланты."
-        },
-        altar: {
-            title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ",
-            sub: "Клановые рейды, ритуалы и слияние стихий",
-            icon: "⛩️",
-            desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Металлолом и самоцветы, чтобы пробуждать скрытые свойства снаряжения, перековывать стихии вещей и получать общие клановые благословения перед вылетом."
-        },
-        farm: {
-            title: "🌾 АСТРАЛЬНАЯ ФЕРМА",
-            sub: "Выращивание редких трав и алхимия",
-            icon: "🌾",
-            desc: "Личные угодья Ордена под куполом Цитадели. Здесь вы сможете высаживать космические семена, собирать урожай целебных кристаллов и самостоятельно варить Зелья исцеления, эликсиры ярости и лакомства для ускорения Питомца."
-        },
-        shop: {
-            title: "🏪 ЛАВКА ОРДЕНА",
-            sub: "Торговый пост контрабандистов Предела",
-            icon: "🏪",
-            desc: "Закрытый рынок для членов Ордена. Скоро здесь появится обмен Металлолома и золота на недостающие чертежи экипировки, сундуки с самоцветами, ремонтные наборы и редкие артефакты для Корабля и Питомца."
-        }
+        skills: { title: "🌳 ДРЕВО НАВЫКОВ", sub: "Древние знания и перки Ордена", icon: "🌳", desc: "Здесь откроется ветвь развития всего Ордена Кхамача. Вы сможете усиливать доход золота в Ратуше, увеличивать удачу при поиске редких самоцветов, сокращать время космических походов Питомца и открывать пассивные боевые таланты." },
+        altar:  { title: "⛩️ АЛТАРЬ ВОЗНЕСЕНИЯ", sub: "Клановые рейды и ритуалы", icon: "⛩️", desc: "Священное место силы для совместных клановых механик, коллективных ритуалов и кооперативных рейдов Ордена на древних Титанов. Также здесь можно будет приносить в жертву Металлолом и самоцветы, пробуждать скрытые свойства снаряжения и получать общие благословения перед вылетом." },
+        farm:   { title: "🌾 АСТРАЛЬНАЯ ФЕРМА", sub: "Выращивание редких трав", icon: "🌾", desc: "Личные угодья Ордена под куполом Цитадели. Здесь вы сможете высаживать космические семена, собирать урожай целебных кристаллов и самостоятельно варить Зелья исцеления и лакомства для ускорения Питомца." },
+        shop:   { title: "🏪 ЛАВКА ОРДЕНА", sub: "Торговый пост Предела", icon: "🏪", desc: "Закрытый рынок для членов Ордена. Скоро здесь появится обмен Металлолома и золота на недостающие чертежи экипировки, сундуки с самоцветами, ремонтные наборы и редкие артефакты." }
     };
     const info = meta[key] || meta.skills;
     document.getElementById('sub-view-title').innerText = info.title;
     document.getElementById('sub-view-subtitle').innerText = info.sub;
-    document.getElementById('sub-view-body').innerHTML = `
-        <div class="card-box" style="text-align:center; padding:16px 12px;">
-            <div style="font-size:52px; margin-bottom:8px;">${info.icon}</div>
-            <div style="color:#ffd700; font-weight:bold; font-size:13px; margin-bottom:8px;">РАЗДЕЛ В РАЗРАБОТКЕ</div>
-            <p style="margin:0; font-size:12px; line-height:1.5; color:#cdb38c;">${info.desc}</p>
-        </div>
-    `;
+    document.getElementById('sub-view-body').innerHTML = `<div class="card-box" style="text-align:center; padding:16px 12px;"><div style="font-size:52px; margin-bottom:8px;">${info.icon}</div><div style="color:#ffd700; font-weight:bold; font-size:13px; margin-bottom:8px;">РАЗДЕЛ В РАЗРАБОТКЕ</div><p style="margin:0; font-size:12px; line-height:1.5; color:#cdb38c;">${info.desc}</p></div>`;
 }
 
 function initGuildModule() {
     initGuildStorageDefaults();
     renderGuildHeaderStats();
-
     const footer = document.getElementById('guild-version-footer');
     if (footer) footer.innerText = `Орден Кхамача | Сборка ${window.GUILD_VERSION || 'v2.5.0-BETA'}`;
-
     const backBtn = document.getElementById('back-to-hub-btn');
-    if (backBtn) {
-        backBtn.onclick = function() {
-            window.location.href = MAIN_HUB_RETURN_URL + '?t=' + Date.now();
-        };
-    }
+    if (backBtn) backBtn.onclick = function() { window.location.href = MAIN_HUB_RETURN_URL + '?t=' + Date.now(); };
 }

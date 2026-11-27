@@ -9,7 +9,7 @@
     <title>КХАМАЧ — Чертоги Ордена</title>
     <script>
         (function() {
-            window.GUILD_VERSION = "v1.6.0-BETA";
+            window.GUILD_VERSION = "v1.9.1-BETA";
             const buster = Date.now() + '_' + Math.floor(Math.random() * 999999);
             const link = document.createElement('link');
             link.rel = 'stylesheet';
@@ -19,9 +19,13 @@
             const scripts = [
                 'guild-data.js',
                 'guild-core.js',
+                'guild-equip-slots.js',
                 'guild-equip.js',
                 'guild-equip-actions.js',
                 'guild-shaman.js',
+                'guild-ship-audio.js',
+                'guild-ship-ctrl.js',
+                'guild-ship-loot.js',
                 'guild-ship-game.js'
             ];
             function loadSeq(idx) {

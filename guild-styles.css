@@ -4,91 +4,68 @@ html, body {
     display: flex; justify-content: center; align-items: center;
     user-select: none; -webkit-user-select: none; overflow: hidden;
 }
-
-#guild-app {
-    width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;
-}
-
+#guild-app { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
 .guild-window {
     width: 95vw; max-width: 420px; max-height: 96vh;
     background: radial-gradient(circle, #1a1512 0%, #0d0a08 100%);
     border: 4px solid #1a1613; outline: 2px solid #8a7350; outline-offset: -3px;
     box-shadow: 0 0 40px rgba(0,0,0,0.95), inset 0 0 25px rgba(0,0,0,0.8);
-    padding: 10px 10px; box-sizing: border-box; text-align: center;
+    padding: 10px; box-sizing: border-box; text-align: center;
     display: flex; flex-direction: column; position: relative;
 }
-
-.guild-header {
-    display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px;
-}
-
+.guild-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 4px; }
 h1 { font-size: 19px; color: #e6c280; margin: 0; letter-spacing: 2px; font-weight: 900; text-shadow: 0 2px 4px #000; }
 h2 { font-size: 18px; color: #e6c280; margin: 0 0 3px 0; text-shadow: 0 2px 4px #000; }
-
 .subtitle {
     font-size: 10px; color: #8a7350; letter-spacing: 1.5px; text-transform: uppercase;
     border-bottom: 1px dashed #4a3f2c; padding-bottom: 4px; margin-bottom: 6px; display: block;
 }
-
-.guild-grid {
-    display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; width: 100%; margin-bottom: 8px;
-}
-
+.guild-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; width: 100%; margin-bottom: 8px; }
 .tile-btn {
     aspect-ratio: 1.75 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
     gap: 3px; background: linear-gradient(to bottom, #2d2621 0%, #171311 100%);
     border: 1px solid #544432; border-radius: 4px; color: #cdb38c; cursor: pointer;
     box-shadow: 0 4px 8px rgba(0,0,0,0.6); transition: all 0.15s ease;
 }
-.tile-btn:hover { border-color: #cbb281; color: #fff; box-shadow: 0 0 12px rgba(203,178,129,0.45); }
 .tile-btn:active { transform: scale(0.97); }
 .tile-icon { font-size: 30px; line-height: 1; }
-.tile-label { font-size: 11px; font-weight: bold; letter-spacing: 0.4px; }
-
+.tile-label { font-size: 11px; font-weight: bold; }
 .gear-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; width: 100%; }
 .gem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; }
-
 .gear-tile {
     aspect-ratio: 1.45 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; padding: 6px; border-radius: 5px; cursor: pointer; position: relative; transition: transform 0.12s ease;
+    gap: 3px; padding: 6px; border-radius: 5px; cursor: pointer;
 }
 .gem-tile {
     aspect-ratio: 1 / 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 2px; padding: 4px; border-radius: 5px; cursor: pointer; transition: transform 0.12s ease;
+    gap: 2px; padding: 4px; border-radius: 5px; cursor: pointer;
 }
-.gear-tile:active, .gem-tile:active { transform: scale(0.95); }
 .gear-tile.empty, .gem-tile.empty {
     background: rgba(15, 12, 10, 0.55); border: 1px dashed #3a3025; color: #5c4932; opacity: 0.5; cursor: default;
 }
-
 .rar-1 { background: linear-gradient(to bottom, #292929, #141414); border: 1px solid #7a7a7a; }
 .rar-2 { background: linear-gradient(to bottom, #16331b, #0b1a0e); border: 1px solid #2ecc71; box-shadow: 0 0 7px rgba(46,204,113,0.35); }
 .rar-3 { background: linear-gradient(to bottom, #192b42, #0d1624); border: 1px solid #4da6ff; box-shadow: 0 0 8px rgba(77,166,255,0.4); }
 .rar-4 { background: linear-gradient(to bottom, #321947, #190c26); border: 1px solid #c66bff; box-shadow: 0 0 9px rgba(198,107,255,0.45); }
 .rar-5 { background: linear-gradient(to bottom, #423c0c, #211e05); border: 1px solid #ffe600; box-shadow: 0 0 11px rgba(255,230,0,0.55); }
 .rar-6 { background: linear-gradient(to bottom, #471414, #240909); border: 1px solid #ff3b3b; box-shadow: 0 0 13px rgba(255,59,59,0.65); }
-
 .hex-board { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
 .hex-row { display: flex; justify-content: center; gap: 4px; margin-top: -7px; }
 .hex-row:first-child { margin-top: 0; }
 .hex-cell {
     width: 39px; height: 42px;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: bold; cursor: pointer; transition: transform 0.1s ease;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; cursor: pointer;
 }
-.hex-cell:active { transform: scale(0.92); }
 .hex-owned { background: linear-gradient(to bottom, #2c5e2e, #163317); color: #a8f0aa; cursor: default; }
 .hex-front { background: linear-gradient(to bottom, #993322, #52160c); color: #ffe88c; filter: drop-shadow(0 0 3px #ffd700); }
 .hex-locked { background: linear-gradient(to bottom, #3b1515, #1f0a0a); color: #7a4949; opacity: 0.55; cursor: not-allowed; }
-.hex-boss  { background: linear-gradient(to bottom, #8a143e, #47071e); color: #ffd700; }
+.hex-boss { background: linear-gradient(to bottom, #8a143e, #47071e); color: #ffd700; }
 .hex-big {
     width: 118px; height: 132px; margin: 8px auto;
     clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    font-size: 38px; cursor: pointer; touch-action: none;
+    display: flex; align-items: center; justify-content: center; font-size: 38px; cursor: pointer; touch-action: none;
 }
-
 .sub-body {
     flex: 1; overflow-y: auto; text-align: left; background: rgba(0,0,0,0.4);
     border: 1px solid #4a3f2c; border-radius: 4px; padding: 6px; margin-bottom: 8px;

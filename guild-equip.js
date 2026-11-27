@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.0.5)
+   ОРДЕН КХАМАЧА — ЛЁГКИЙ ЭКРАН ПИТОМЦА/КОРАБЛЯ И ЭКРАН НАСТРОЕК (v2.4.0)
    ========================================================================== */
 
 function renderOwnerHubView(owner) {
@@ -67,23 +67,20 @@ function triggerShipFlightSafe() {
     }
     const ft = document.getElementById('guild-version-footer');
     const errInfo = ft ? ft.innerText : 'Неизвестная ошибка загрузки скриптов';
-    alert("Полёт не запустился. Причина:\n" + errInfo + "\n\nПроверьте, что все файлы из списка scripts в index.html загружены в репозиторий.");
+    alert("Полёт не запустился. Причина:\n" + errInfo);
 }
 
 function renderOwnerGearConfig(owner) {
     const isPet = owner === 'pet';
     setSubViewBack(owner, isPet ? '↩️ Назад к Питомцу' : '↩️ Назад к Кораблю');
     document.getElementById('sub-view-title').innerText = isPet ? "⚙️ СНАРЯЖЕНИЕ ПИТОМЦА" : "⚙️ МОДУЛИ КОРАБЛЯ";
-    document.getElementById('sub-view-subtitle').innerText = "Ремонт, Камни, Чары и Статы";
+    document.getElementById('sub-view-subtitle').innerText = "Нажмите на вещь для просмотра и улучшения";
 
     const body = document.getElementById('sub-view-body');
     const stats = calculateOwnerStats(owner);
     const equip = getEquipStorage(owner);
-    const gems = getGemsList();
-    const scrap = getScrapMetal();
-    const dust = parseInt(localStorage.getItem('khamach_astral_dust') || '0');
 
-    const slotsHTML = typeof buildOwnerSlotsHTML === 'function' ? buildOwnerSlotsHTML(owner, equip, gems, scrap, dust) : '';
+    const slotsHTML = typeof buildOwnerSlotsHTML === 'function' ? buildOwnerSlotsHTML(owner, equip) : '';
     const skillsHTML = typeof buildActiveSkillsHTML === 'function' ? buildActiveSkillsHTML(stats.setCounts) : '';
 
     body.innerHTML = `
@@ -98,7 +95,6 @@ function renderOwnerGearConfig(owner) {
             </div>
         </div>
         <div class="card-box">
-            <div style="font-size:10px; color:#8cd1ff; margin-bottom:4px;">🔩 Лом: ${scrap} | ✨ Прах: ${dust} | 💎 Камней: ${gems.length}</div>
             ${slotsHTML}
         </div>
     `;

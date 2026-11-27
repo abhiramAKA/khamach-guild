@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ЛУТ ПО ПОРОГАМ УРОНА И ИЗНОС СНАРЯЖЕНИЯ (v2.0.0-BETA)
+   ОРДЕН КХАМАЧА — 4 ПОРОГА НАГРАД (1500 / 3000 / 5000 / 8000) (v2.1.2-BETA)
    ========================================================================== */
 
 function applyPostBattleWear() {
@@ -24,16 +24,19 @@ function applyPostBattleWear() {
 }
 
 function getShipLootTierByDamage(damageDealt) {
-    if (damageDealt >= 3500) {
-        return { label: '🎁 Шмотка + 💎 Камень (100%)', itemChance: 1.0, gemChance: 1.0, nextGoal: 0 };
+    if (damageDealt >= 8000) {
+        return { stage: 4, label: 'Порог 4: 🎁100% + 💎100%', itemChance: 1.0, gemChance: 1.0, nextGoal: 0 };
+    }
+    if (damageDealt >= 5000) {
+        return { stage: 3, label: 'Порог 3: 🎁100% + 💎50%', itemChance: 1.0, gemChance: 0.5, nextGoal: 8000 };
+    }
+    if (damageDealt >= 3000) {
+        return { stage: 2, label: 'Порог 2: 🎁100%', itemChance: 1.0, gemChance: 0, nextGoal: 5000 };
     }
     if (damageDealt >= 1500) {
-        return { label: '🎁 Шмотка + 💎 (50%)', itemChance: 1.0, gemChance: 0.5, nextGoal: 3500 };
+        return { stage: 1, label: 'Порог 1: 🎁50%', itemChance: 0.5, gemChance: 0, nextGoal: 3000 };
     }
-    if (damageDealt >= 500) {
-        return { label: '🎁 Шмотка (100%)', itemChance: 1.0, gemChance: 0, nextGoal: 1500 };
-    }
-    return { label: '🎁 Шанс шмотки (40%)', itemChance: 0.4, gemChance: 0, nextGoal: 500 };
+    return { stage: 0, label: 'Без награды', itemChance: 0, gemChance: 0, nextGoal: 1500 };
 }
 
 function grantEndlessBossRewards(damageDealt) {
@@ -50,7 +53,7 @@ function grantEndlessBossRewards(damageDealt) {
     const recordTag = isNewRecord ? ' 🏆 НОВЫЙ РЕКОРД!' : '';
     let report = [];
 
-    if (Math.random() < tier.itemChance) {
+    if (tier.itemChance > 0 && Math.random() < tier.itemChance) {
         const sets = ['flame', 'abyss', 'storm', 'frost'];
         const pSlots = EQUIP_SLOTS.pet;
         const s = pSlots[Math.floor(Math.random() * pSlots.length)];
@@ -75,9 +78,12 @@ function grantEndlessBossRewards(damageDealt) {
     }
 
     if (report.length === 0) {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%). Трофеи не выпали.`);
+        const tip = tier.stage === 0
+            ? 'До 1-го порога (1 500 урона) не хватило немного выдержки!'
+            : 'Шанс 50% на 1-м пороге в этот раз не сработал — дотяните до 3 000 урона для гарантии!';
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n${tip}`);
     } else {
-        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nНанесено урона: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (сложено в Рюкзак):\n• ${report.join('\n• ')}`);
+        alert(`ВЫЛЕТ ЗАВЕРШЁН!\nУрон: ${dmg.toLocaleString('ru-RU')}${recordTag}\nСнаряжение износилось (-10%).\n\nДобыто (сложено в Рюкзак):\n• ${report.join('\n• ')}`);
     }
     if (typeof renderOwnerHubView === 'function') renderOwnerHubView('ship');
 }

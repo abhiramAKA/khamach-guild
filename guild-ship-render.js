@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ КОРАБЛЯ С БОССОМ (v2.0.3-BETA)
+   ОРДЕН КХАМАЧА — ОТРИСОВКА СЦЕНЫ БОЯ КОРАБЛЯ С БОССОМ (v2.0.4-BETA)
    ========================================================================== */
 
 function renderShipBattleFrame(ctx, canvas, state, cfg) {
@@ -24,7 +24,7 @@ function renderShipBattleFrame(ctx, canvas, state, cfg) {
     const tierInfo = typeof getShipLootTierByDamage === 'function'
         ? getShipLootTierByDamage(curDmg)
         : { label: '🎁 40%', nextGoal: 500 };
-    const goalStr = tierInfo.nextGoal > 0 ? `→ ${tierInfo.nextGoal}` : 'МАКС!';
+    const goalStr = tierInfo.nextGoal > 0 ? '-> ' + tierInfo.nextGoal : 'МАКС!';
 
     ctx.fillStyle = "rgba(0,0,0,0.65)";
     ctx.fillRect(8, 4, 344, 16);
@@ -32,22 +32,23 @@ function renderShipBattleFrame(ctx, canvas, state, cfg) {
     ctx.fillStyle = "#ffd700";
     ctx.font = "10px Georgia";
     ctx.textAlign = "left";
-    ctx.fillText(`💥 ${curDmg} (${tierInfo.label} ${goalStr})`, 12, 16);
+    ctx.fillText('Урон: ' + curDmg + ' (' + tierInfo.label + ' ' + goalStr + ')', 12, 16);
 
     ctx.fillStyle = "#ff8c8c";
     ctx.textAlign = "right";
-    ctx.fillText(`Ярость:${state.rageStage + 1}`, 346, 16);
+    ctx.fillText('Ярость:' + (state.rageStage + 1), 346, 16);
 
     if (cfg.stormCnt > 0) {
+        const barW = Math.floor(340 * (state.critCharge / 100));
         ctx.fillStyle = "#221133";
         ctx.fillRect(10, 220, 340, 4);
         ctx.fillStyle = "#ffe88c";
-        ctx.fillRect(10, 220, 340 * (state.critCharge / 100), 4);
+        ctx.fillRect(10, 220, barW, 4);
     }
 
     ctx.fillStyle = "#2ecc71";
     ctx.font = "11px Georgia";
     ctx.textAlign = "left";
-    const shieldTxt = state.shieldReady ? '❄️Щит' : '';
-    ctx.fillText(`❤️${state.hp}/${cfg.maxHP} | ⚔️${cfg.totalAtk} 💚${cfg.totalReg} ${shieldTxt}`, 10, 236);
+    const shieldTxt = state.shieldReady ? ' [Щит]' : '';
+    ctx.fillText('HP: ' + state.hp + '/' + cfg.maxHP + ' | Атк: ' + cfg.totalAtk + ' Рег: ' + cfg.totalReg + shieldTxt, 10, 236);
 }
